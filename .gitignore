@@ -1,0 +1,19 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio solution files
+*.suo
+*.user
+*.bak
+*.pdb
+*.class
+
+# VS Code-specifieke mappen (veroorzaakte de fout)
+.vs/
+
+# NuGet packages
+packages/
+
+# Log files
+*.log
