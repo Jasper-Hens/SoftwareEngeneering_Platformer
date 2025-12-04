@@ -69,16 +69,37 @@ namespace test
             // Definitie van de tile uitsnede (SourceRectangle): sprite12, 325, 79, 64, 50
             Rectangle sourceTile = new Rectangle(325, 79, 64, 50);
 
-            // Definieer de World Positie/Hitbox (Destination Rectangle)
-            // Tip: Maak de grootte van de BoundingBox gelijk aan de SourceRectangle hoogte/breedte 
-            // zodat de tile correct wordt getekend zonder te stretchen.
-            Rectangle groundRect = new Rectangle(0, 400, 800, 50); // grond (stretchen is OK hier)
-            Rectangle platformRect = new Rectangle(200, 310, 128, 50); // platform midden
+            // Sla de breedte en hoogte op om de individuele blokken te bepalen
+            int tileWidth = sourceTile.Width;   // 64
+            int tileHeight = sourceTile.Height; // 50
 
-            // MAAK de Block objecten aan en voeg ze toe
-            // Hier maak je voor het 'grond'-blok een NIEUW Block aan met de tile uitsnede
-            _blocks.Add(new Block(groundRect, sourceTile, _tilesSpriteSheet));
-            _blocks.Add(new Block(platformRect, sourceTile, _tilesSpriteSheet));
+            // --- GROND: Meerdere tiles genereren (over 800 pixels breed) ---
+            int groundLevelY = 400; // De Y-positie waar de vloer begint
+            int worldWidth = 800;   // Totale breedte van het scherm
+
+            // Loop van x=0 tot de wereldbreedte, met stappen van de tile breedte
+            for (int x = 0; x < worldWidth; x += tileWidth)
+            {
+                // Destination Rect: Nieuwe positie (x, y), met de breedte en hoogte van de tile
+                Rectangle worldRect = new Rectangle(x, groundLevelY, tileWidth, tileHeight);
+
+                // Maak een nieuw Block object aan
+                _blocks.Add(new Block(worldRect, sourceTile, _tilesSpriteSheet));
+            }
+
+            // --- MIDDEN PLATFORM: Eén tile herhaald ---
+            // We maken hier bijvoorbeeld 3 tiles achter elkaar op positie 200, 310
+            int platformX = 200;
+            int platformY = 310;
+            int platformTilesCount = 3;
+
+            for (int i = 0; i < platformTilesCount; i++)
+            {
+                int currentX = platformX + (i * tileWidth);
+                Rectangle worldRect = new Rectangle(currentX, platformY, tileWidth, tileHeight);
+
+                _blocks.Add(new Block(worldRect, sourceTile, _tilesSpriteSheet));
+            }
         }
 
         protected override void Update(GameTime gameTime)
