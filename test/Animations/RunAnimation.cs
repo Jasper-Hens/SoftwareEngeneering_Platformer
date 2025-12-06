@@ -8,12 +8,12 @@ namespace test.Animations
         public RunAnimation(Texture2D texture) : base(texture)
         {
             Frames.Add(new Rectangle(227, 23, 51, 63));
-            Frames.Add(new Rectangle(159, 24, 49, 62));
-            Frames.Add(new Rectangle(437, 24, 48, 62));
-            Frames.Add(new Rectangle(19, 25, 48, 61));
-            Frames.Add(new Rectangle(297, 26, 48, 60));
-            Frames.Add(new Rectangle(86, 27, 54, 59));
-            Frames.Add(new Rectangle(364, 27, 54, 59));
+            Frames.Add(new Rectangle(159, 23, 49, 62));
+            Frames.Add(new Rectangle(437, 23, 48, 62));
+            Frames.Add(new Rectangle(19, 23, 48, 61));
+            Frames.Add(new Rectangle(297, 23, 48, 60));
+            Frames.Add(new Rectangle(86, 23, 54, 59));
+            Frames.Add(new Rectangle(364, 23, 54, 59));
         }
     }
 }

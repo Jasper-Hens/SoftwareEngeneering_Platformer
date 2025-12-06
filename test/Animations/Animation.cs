@@ -6,6 +6,8 @@ namespace test.Animations
 {
     public abstract class Animation
     {
+
+        public const int MAX_FRAME_HEIGHT = 65; // Hoogste frame is 65px
         public List<Rectangle> Frames { get; protected set; }
         public Texture2D Texture { get; protected set; }
         public int CurrentFrame { get; private set; }
@@ -36,8 +38,15 @@ namespace test.Animations
         public void Draw(SpriteBatch sb, Vector2 position, bool facingRight)
         {
             var flip = facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            Rectangle currentFrameRect = Frames[CurrentFrame];
 
-            sb.Draw(Texture,position,Frames[CurrentFrame],Color.White,0f,Vector2.Zero,1f,flip,0f);
+            // Bereken de verschuiving: Max hoogte (65) - Huidige hoogte.
+            float yOffset = MAX_FRAME_HEIGHT - currentFrameRect.Height;
+
+            // Pas de positie aan met de offset
+            Vector2 drawPosition = new Vector2(position.X, position.Y + yOffset);
+
+            sb.Draw(Texture, drawPosition, currentFrameRect, Color.White, 0f, Vector2.Zero, 1f, flip, 0f);
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using test.Animations;
 using System.Collections.Generic;
+using test.Animations;
+using test.block_Interfaces;
+using test.Blocks;
 
 namespace test
 {
@@ -26,6 +28,10 @@ namespace test
         private float moveSpeed = 4f;
         private float jumpStrength = -10f;
 
+        // Vaste afmetingen voor de hitbox (breedste/hoogste frame van alle animaties)
+        private const int HITBOX_WIDTH = 69;
+        private const int HITBOX_HEIGHT = 65;
+
         public Hero(Texture2D idleTexture, Texture2D runTexture, Texture2D jumpTexture)
         {
             _idle = new IdleAnimation(idleTexture);
@@ -36,7 +42,7 @@ namespace test
             Hitbox = new Hitbox();
         }
 
-        public void Update(GameTime gameTime, List<Rectangle> platforms)
+        public void Update(GameTime gameTime, List<Block> blocks)
         {
             // --- Input ---
             Velocity.X = 0;
@@ -44,7 +50,7 @@ namespace test
             if (IsRunningLeft) { Velocity.X -= moveSpeed; FacingRight = false; }
 
             // Springen
-            if (Jump && IsOnGround(platforms))
+            if (Jump && IsOnGround(blocks))
             {
                 Velocity.Y = jumpStrength;
             }
@@ -52,14 +58,16 @@ namespace test
             // Gravity
             Velocity.Y += gravity;
 
-            // --- Position updaten ---
-            Position += Velocity;
+            // X-beweging en Collision (zijwaartse beweging wordt alleen door ISolid blocks geblokkeerd)
+            Position.X += Velocity.X;
+            ResolveCollisionsX(blocks);
 
-            // --- Collision check ---
-            ResolveCollisions(platforms);
+            // Y-beweging en Collision
+            Position.Y += Velocity.Y;
+            ResolveCollisionsY(blocks);
 
             // --- Animatie update ---
-            if (!IsOnGround(platforms))
+            if (!IsOnGround(blocks))
                 _current = _jump;
             else if (Velocity.X != 0)
                 _current = _run;
@@ -69,8 +77,7 @@ namespace test
             _current.Update(gameTime);
 
             // --- Update hitbox ---
-            Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
-            Hitbox.Update(Position, currentFrame);
+            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
         }
 
         public void Draw(SpriteBatch sb)
@@ -79,60 +86,112 @@ namespace test
         }
 
         // Check of de hero op een platform staat
-        private bool IsOnGround(List<Rectangle> platforms)
+        private bool IsOnGround(List<Block> blocks)
         {
-            foreach (var plat in platforms)
+            // Tijdelijke hitbox (1px lager) om te checken of we op de grond staan
+            Rectangle footCheckRect = Hitbox.HitboxRect;
+            footCheckRect.Y += 1;
+
+            foreach (var block in blocks)
             {
-                if (Hitbox.HitboxRect.Bottom + 1 >= plat.Top &&
-                    Hitbox.HitboxRect.Bottom <= plat.Top + 5 &&
-                    Hitbox.HitboxRect.Right > plat.Left &&
-                    Hitbox.HitboxRect.Left < plat.Right)
+                // Alleen controleren op Solid en Platform blocks
+                if (block is ISolid || block is IPlatform)
                 {
-                    return true;
+                    Rectangle plat = block.BoundingBox;
+
+                    if (footCheckRect.Intersects(plat))
+                    {
+                        // Zorg ervoor dat de hero bovenop het platform staat (Bottom moet ongeveer gelijk zijn aan Top)
+                        if (Hitbox.HitboxRect.Bottom <= plat.Top + 1)
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
         }
 
-        // --- Resolutie van collisions ---
-        private void ResolveCollisions(List<Rectangle> platforms)
+        // --- Resolutie van X-as collisions ---
+        private void ResolveCollisionsX(List<Block> blocks)
         {
-            foreach (var plat in platforms)
-            {
-                if (Hitbox.HitboxRect.Intersects(plat))
-                {
-                    Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, plat);
+            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
 
-                    // Resolutie op Y-as (top/bottom)
-                    if (intersection.Height < intersection.Width)
+            foreach (var block in blocks)
+            {
+                if (block is ISolid) // Alleen Solid blocks blokkeren zijwaartse beweging
+                {
+                    Rectangle plat = block.BoundingBox;
+
+                    if (Hitbox.HitboxRect.Intersects(plat))
                     {
-                        if (Hitbox.HitboxRect.Top < plat.Top)
-                        {
-                            Position.Y -= intersection.Height; // bovenop platform
-                            Velocity.Y = 0;
-                        }
-                        else
-                        {
-                            Position.Y += intersection.Height; // onder platform
-                            Velocity.Y = 0;
-                        }
-                    }
-                    // Resolutie op X-as (links/rechts)
-                    else
-                    {
-                        if (Hitbox.HitboxRect.Left < plat.Left)
-                            Position.X -= intersection.Width; // tegen linkerzijde
-                        else
-                            Position.X += intersection.Width; // tegen rechterzijde
+                        Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, plat);
+
+                        // Verschuif terug op X-as
+                        if (Velocity.X > 0)
+                            Position.X -= intersection.Width;
+                        else if (Velocity.X < 0)
+                            Position.X += intersection.Width;
 
                         Velocity.X = 0;
-                    }
 
-                    // Update hitbox na correctie
-                    Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
-                    Hitbox.Update(Position, currentFrame);
+                        // Update hitbox na correctie
+                        Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+                    }
                 }
             }
         }
+
+        // --- Resolutie van Y-as collisions ---
+        private void ResolveCollisionsY(List<Block> blocks)
+        {
+            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+
+            foreach (var block in blocks)
+            {
+                if (block is ISolid || block is IPlatform)
+                {
+                    Rectangle plat = block.BoundingBox;
+
+                    if (Hitbox.HitboxRect.Intersects(plat))
+                    {
+                        Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, plat);
+
+                        if (intersection.Height < intersection.Width)
+                        {
+                            if (Velocity.Y > 0) // Naar beneden bewegen (landen/vallen op platform)
+                            {
+                                // IPlatform check: als we van onder komen, negeer de botsing
+                                if (block is IPlatform && Hitbox.HitboxRect.Bottom - intersection.Height > plat.Top)
+                                {
+                                    continue; // Ga door het platform heen
+                                }
+
+                                // Solide of IPlatform van boven: Land op het blok
+                                Position.Y -= intersection.Height;
+                                Velocity.Y = 0;
+                            }
+                            else if (Velocity.Y < 0) // Naar boven bewegen (tegen onderkant platform)
+                            {
+                                // IPlatform blokkeert NIET van onder, ISolid blokkeert WEL
+                                if (block is ISolid)
+                                {
+                                    Position.Y += intersection.Height;
+                                    Velocity.Y = 0;
+                                }
+                                // IPlatform wordt genegeerd, zodat de speler er doorheen springt.
+                            }
+
+                            // Update hitbox na correctie
+                            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+                        }
+                    }
+                }
+            }
+        }
+
+        // De OUDE IsOnGround en ResolveCollisions methoden zijn nu verwijderd.
     }
 }
+        
+

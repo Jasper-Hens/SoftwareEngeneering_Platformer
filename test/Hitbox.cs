@@ -11,13 +11,13 @@ namespace test
     {
         public Rectangle HitboxRect { get; private set; }
 
-        public void Update(Vector2 position, Rectangle frame)
+        public void Update(Vector2 position, int width, int height)
         {
             HitboxRect = new Rectangle(
                 (int)position.X,
                 (int)position.Y,
-                frame.Width,
-                frame.Height
+                width,
+                height
             );
         }
 
