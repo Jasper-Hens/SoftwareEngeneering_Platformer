@@ -30,5 +30,10 @@ namespace test.Block_Classes
 
             return new Rectangle(worldX, worldY, spriteWidth, spriteHeight);
         }
+
+        public bool IsSolidBlock()
+        {
+            return true;
+        }
     }
 }

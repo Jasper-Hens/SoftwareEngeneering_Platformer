@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace test.block_Interfaces
 {
+    // Dit is een 'Marker Interface' (leeg), of je kan er methodes aan toevoegen
     public interface IPlatform
     {
-        // IPlatform: Blockeert alleen beweging van boven (Jump-Through).
+        // Voorlopig leeg, het dient als een label om te weten dat je er doorheen kan springen
     }
 }

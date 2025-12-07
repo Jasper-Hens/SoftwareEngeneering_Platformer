@@ -25,5 +25,10 @@ namespace test.Blocks
 
             return new Rectangle(worldX, worldY, spriteWidth, spriteHeight);
         }
+
+        bool ISolid.IsSolidBlock()
+        {
+            return true;
+        }
     }
 }

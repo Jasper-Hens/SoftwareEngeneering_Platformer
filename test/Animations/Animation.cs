@@ -6,14 +6,21 @@ namespace test.Animations
 {
     public abstract class Animation
     {
-
-        public const int MAX_FRAME_HEIGHT = 65; // Hoogste frame is 65px
         public List<Rectangle> Frames { get; protected set; }
         public Texture2D Texture { get; protected set; }
         public int CurrentFrame { get; private set; }
-        public double FrameSpeed { get; protected set; } = 120;
+        public double FrameSpeed { get; protected set; } = 80;
 
         private double _timer = 0;
+
+        // Eigenschappen voor combat
+        public bool IsLooping { get; set; } = true;
+        public bool IsFinished { get; private set; } = false;
+
+        // Damage en Hitbox data
+        public List<int> DamageFrames { get; set; } = new List<int>();
+        public int AttackRange { get; set; } = 60;
+        public int AttackHeight { get; set; } = 40;
 
         public Animation(Texture2D texture)
         {
@@ -23,27 +30,53 @@ namespace test.Animations
 
         public void Update(GameTime gameTime)
         {
+            // BELANGRIJK: Als hij klaar is en niet mag loopen, stop hier.
+            if (!IsLooping && IsFinished)
+                return;
+
             _timer += gameTime.ElapsedGameTime.TotalMilliseconds;
 
             if (_timer >= FrameSpeed)
             {
                 CurrentFrame++;
-                if (CurrentFrame >= Frames.Count)
-                    CurrentFrame = 0;
 
+                // Einde van de animatie bereikt?
+                if (CurrentFrame >= Frames.Count)
+                {
+                    if (IsLooping)
+                    {
+                        CurrentFrame = 0; // Begin opnieuw
+                    }
+                    else
+                    {
+                        // STOP!
+                        CurrentFrame = Frames.Count - 1; // Blijf op het laatste frame
+                        IsFinished = true;               // ZET HET VLAGGETJE AAN
+                    }
+                }
                 _timer = 0;
             }
         }
 
+        public void Reset()
+        {
+            CurrentFrame = 0;
+            _timer = 0;
+            IsFinished = false; // Reset het vlaggetje
+        }
+
         public void Draw(SpriteBatch sb, Vector2 position, bool facingRight)
         {
+            // Zorg dat deze offset logica klopt met jouw game (bijv. 65px hoogte)
             var flip = facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-            Rectangle currentFrameRect = Frames[CurrentFrame];
 
-            // Bereken de verschuiving: Max hoogte (65) - Huidige hoogte.
+            // Constante voor Y-offset (zorg dat dit matcht met jouw max hoogte)
+            const int MAX_FRAME_HEIGHT = 65;
+
+            Rectangle currentFrameRect = Frames[CurrentFrame];
             float yOffset = MAX_FRAME_HEIGHT - currentFrameRect.Height;
 
-            // Pas de positie aan met de offset
+            // Gebruik de positie + offset
             Vector2 drawPosition = new Vector2(position.X, position.Y + yOffset);
 
             sb.Draw(Texture, drawPosition, currentFrameRect, Color.White, 0f, Vector2.Zero, 1f, flip, 0f);

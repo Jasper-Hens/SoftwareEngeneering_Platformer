@@ -31,9 +31,9 @@ namespace test
         private List<Block> _blocks;
 
 
-     
+
         /// ///////////////// camera
-        
+
         private Camera _camera;
 
         // Level afmetingen (50 kolommen x 12 rijen)
@@ -50,6 +50,15 @@ namespace test
         private BackgroundLayer _wallLayer;
         private BackgroundLayer _floorLayer;
         private BackgroundLayer _pillarsLayer;
+
+        // aanvallen
+        private Texture2D _attack1Texture;
+        private Texture2D _attack2Texture;
+        private Texture2D _attack3Texture;
+        private Texture2D _runAttackTexture;
+
+        // slash animatie
+        private Texture2D _slashTexture;
 
         public Game1()
         {
@@ -79,7 +88,7 @@ namespace test
 
             // Zorg ervoor dat de Hero op een startpositie staat
             // (bijvoorbeeld op de eerste tile, Y=Row 6 * TILE_SIZE = 384)
-            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture);
+            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture);
             _hero.Position = new Vector2(100, 300); // Start hoger dan de grond (Row 6)
 
             base.Initialize();
@@ -111,10 +120,19 @@ namespace test
             _runTexture = Content.Load<Texture2D>("Run");
             _jumpTexture = Content.Load<Texture2D>("Jump");
 
+            // attacks
+            _attack1Texture = Content.Load<Texture2D>("Attacks/Attack 1");
+            _attack2Texture = Content.Load<Texture2D>("Attacks/Attack 2");
+            _attack3Texture = Content.Load<Texture2D>("Attacks/Attack 3");
+            _runAttackTexture = Content.Load<Texture2D>("Attacks/Run+Attack");
+
+            // slash effect
+            _slashTexture = Content.Load<Texture2D>("Attacks/SlashSprite");
+
             _blokTexture = new Texture2D(GraphicsDevice, 1, 1);
             _blokTexture.SetData(new[] { Color.White });
 
-            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture);
+            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture);
 
             _tilesSpriteSheet = Content.Load<Texture2D>("Tiles/tilesSpriteSheet");
             _brightBackGroundSpriteSheet = Content.Load<Texture2D>("Background/BrightBackgroundSpriteSheet");
@@ -122,7 +140,7 @@ namespace test
             _ItemSpriteSheet = Content.Load<Texture2D>("Items/ItemSpriteSheet");
             _ObjectSpriteSheet = Content.Load<Texture2D>("Objects/ObjectSpriteSheet");
 
-            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture);
+            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture);
 
             // INITIALISEER de blokken lijst
             _blocks = new List<Block>();
@@ -250,6 +268,12 @@ namespace test
 
             // Hero
             _hero.Draw(_spriteBatch);
+
+            if (_hero.IsHitting)
+            {
+                // Teken een semi-transparant rood blokje waar de klap valt
+                _spriteBatch.Draw(_blokTexture, _hero.AttackHitbox, Color.Red * 0.5f);
+            }
 
             // Hero hitbox debug
             _spriteBatch.Draw(_blokTexture, _hero.Hitbox.HitboxRect, Color.Red * 0.4f);
