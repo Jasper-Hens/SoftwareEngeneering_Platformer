@@ -190,7 +190,7 @@ namespace test
             }
         }
 
-        // De OUDE IsOnGround en ResolveCollisions methoden zijn nu verwijderd.
+
     }
 }
         

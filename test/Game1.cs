@@ -43,6 +43,13 @@ namespace test
         private int _levelWidth;
         private int _levelHeight;
 
+        // BACKGROUND
+
+        private BackgroundLayer _skyLayer;
+        private BackgroundLayer _natureLayer;
+        private BackgroundLayer _wallLayer;
+        private BackgroundLayer _floorLayer;
+        private BackgroundLayer _pillarsLayer;
 
         public Game1()
         {
@@ -82,18 +89,18 @@ namespace test
         private int[,] _gameboard = new int[,]
         {
             // 50 kolommen breed (Index 0 tot 49)
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 0
+            { 3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 0
             { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 1
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 2
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 3
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 4
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 5
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 }, // 6 (Platform 2, Grond 1)
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }, // 7
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }, // 8
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }, // 9
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }, // 10
-            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }  // 11
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 2
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 3
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 4
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 5
+            { 0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 6 
+            { 0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 7
+            { 0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 8
+            { 0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 9
+            { 0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 10
+            { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }  // 11 (Onderste rij = Grond)
         };
 
         protected override void LoadContent()
@@ -139,6 +146,61 @@ namespace test
                     }
                 }
             }
+
+            // BACKGROUND
+            Rectangle brightBackgroundSourceRect = new Rectangle(961, 1084, 960, 541);
+
+            int viewportWidth = _graphics.PreferredBackBufferWidth;
+            int viewportHeight = _graphics.PreferredBackBufferHeight;
+
+            // --- 1. Definieer de Source Rectangles ---
+            Rectangle skyRect = new Rectangle(0, 542, 960, 541);
+            Rectangle natureRect = new Rectangle(961, 154, 960, 387);
+            Rectangle wallRect = new Rectangle(961, 542, 960, 541);
+            Rectangle floorRect = new Rectangle(0, 456, 960, 85);
+            Rectangle pillarsRect = new Rectangle(0, 1084, 960, 541);
+
+            // --- 2. Initialisatie van de Lagen ---
+
+            // Parallax Lagen (ScrollRatio < 1.0)
+
+            // SKY: Achterste laag (meest rustig)
+            _skyLayer = new BackgroundLayer(
+                _paleBackGroundSpriteSheet, skyRect,
+                0.1f, // 10% snelheid
+                viewportWidth, viewportHeight, _levelWidth
+            );
+
+            // NATURE: Iets dichterbij
+            _natureLayer = new BackgroundLayer(
+                _paleBackGroundSpriteSheet, natureRect,
+                0.1f, // Zelfde snelheid als Sky, zoals gevraagd
+                viewportWidth, viewportHeight, _levelWidth
+            );
+
+            // Voorgrond Lagen (ScrollRatio = 1.0)
+            // Hoewel ze niet bewegen, gebruiken we de klasse voor de Draw-logica.
+
+            // WALL
+            _wallLayer = new BackgroundLayer(
+                _paleBackGroundSpriteSheet, wallRect,
+                1.0f, // Volledige snelheid
+                viewportWidth, viewportHeight, _levelWidth
+            );
+
+            // FLOOR (Deze moet de vloer van je tiles overlappen)
+            _floorLayer = new BackgroundLayer(
+                _paleBackGroundSpriteSheet, floorRect,
+                1.0f, // Volledige snelheid
+                viewportWidth, viewportHeight, _levelWidth
+            );
+
+            // PILLARS: Voorste laag
+            _pillarsLayer = new BackgroundLayer(
+                _paleBackGroundSpriteSheet, pillarsRect,
+                1.0f, // Volledige snelheid
+                viewportWidth, viewportHeight, _levelWidth
+            );
         }
 
         protected override void Update(GameTime gameTime)
@@ -157,32 +219,42 @@ namespace test
             base.Update(gameTime);
         }
 
+        // In Game1.Draw()
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // 1. Teken de wereld (Blocks en Hero) met de camera transformatie
+            // --- 1. Parallax Lagen (Sky, Nature) ---
+            _spriteBatch.Begin();
+
+            _skyLayer.Draw(_spriteBatch, _camera.Position);
+            _natureLayer.Draw(_spriteBatch, _camera.Position);
+
+            _spriteBatch.End();
+
+
+            // --- 2. Vaste Lagen (Wall, Floor, Pillars), Tiles en Hero ---
             _spriteBatch.Begin(transformMatrix: _camera.GetTransformMatrix());
+
+            // Teken eerst de vaste (niet-bewegende) achtergronddelen, achter de tiles
+            _wallLayer.Draw(_spriteBatch, _camera.Position);
+            // Teken de Floor over de Tiles en Hero heen (als voorgrond, om de tiles te bedekken)
+            _floorLayer.Draw(_spriteBatch, _camera.Position);
+            // Teken de Pillars over de Tiles en Hero heen (als voorgrond)
+            _pillarsLayer.Draw(_spriteBatch, _camera.Position);
+
+            // Tiles (Level geometrie)
+            foreach (var block in _blocks)
+                block.Draw(_spriteBatch);
 
             // Hero
             _hero.Draw(_spriteBatch);
-
-            // Blocks
-            foreach (var block in _blocks)
-                block.Draw(_spriteBatch);
 
             // Hero hitbox debug
             _spriteBatch.Draw(_blokTexture, _hero.Hitbox.HitboxRect, Color.Red * 0.4f);
 
             _spriteBatch.End();
-
-            // 2. Optioneel: Teken UI ZONDER camera transformatie
-            // Dit zorgt ervoor dat de UI (score, health, etc.) stil blijft staan op het scherm
-            /*
-            _spriteBatch.Begin();
-            // Teken hier UI elementen
-            _spriteBatch.End();
-            */
 
             base.Draw(gameTime);
         }
