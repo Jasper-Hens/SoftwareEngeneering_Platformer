@@ -6,7 +6,7 @@ using test.Animations;
 using test.Blocks;
 using test.block_Interfaces;
 using test.Effects;
-using test.Animations.Attack_animations;
+using test.Animations.Attack_animations; // Zorg dat deze klopt met jouw namespace
 
 namespace test
 {
@@ -29,6 +29,8 @@ namespace test
         private float gravity = 0.5f;
         private float moveSpeed = 4f;
         private float jumpStrength = -10f;
+
+        // VASTE HITBOX AFMETINGEN
         private const int HITBOX_WIDTH = 45;
         private const int HITBOX_HEIGHT = 65;
 
@@ -38,9 +40,7 @@ namespace test
         private const double COMBO_WINDOW = 1000;
         private bool _wasAttackPressed = false;
 
-        public Hero(Texture2D idleTex, Texture2D runTex, Texture2D jumpTex,
-                    Texture2D atk1Tex, Texture2D atk2Tex, Texture2D atk3Tex, Texture2D runAtkTex,
-                    Texture2D slashTex)
+        public Hero(Texture2D idleTex, Texture2D runTex, Texture2D jumpTex, Texture2D atk1Tex, Texture2D atk2Tex, Texture2D atk3Tex, Texture2D runAtkTex, Texture2D slashTex)
         {
             _idle = new IdleAnimation(idleTex);
             _run = new RunAnimation(runTex);
@@ -51,17 +51,16 @@ namespace test
             _attack3 = new AttackThreeAnimation(atk3Tex);
             _runAttack = new RunAttackAnimation(runAtkTex);
 
-            // BELANGRIJK: Zorg dat ze NIET loopen!
             _attack1.IsLooping = false;
             _attack2.IsLooping = false;
             _attack3.IsLooping = false;
             _runAttack.IsLooping = false;
 
-            // Damage Frames instellen (voorbeeld waarden)
-            ((AttackOneAnimation)_attack1).DamageFrames = new List<int> { 5 };
-            ((AttackTwoAnimation)_attack2).DamageFrames = new List<int> { 2, 3 };
-            ((AttackThreeAnimation)_attack3).DamageFrames = new List<int> { 2, 3 };
-            ((RunAttackAnimation)_runAttack).DamageFrames = new List<int> { 3, 4 };
+            // Damage Frames (Zorg dat deze kloppen met jouw animaties!)
+            _attack1.DamageFrames = new List<int> { 0, 1, 2, 3, 4, 5 };
+            _attack2.DamageFrames = new List<int> { 2, 3 };
+            _attack3.DamageFrames = new List<int> { 2, 3 };
+            _runAttack.DamageFrames = new List<int> { 3, 4 };
 
             _airSlashEffect = new VisualEffect(slashTex, 64, 64, 4);
             _current = _idle;
@@ -71,6 +70,11 @@ namespace test
         public void Update(GameTime gameTime, List<Block> blocks)
         {
             KeyboardState k = Keyboard.GetState();
+
+            // FIX 1: Reset ALTIJD de hitbox status aan het begin van de update
+            // Zo blijft hij nooit hangen als de animatie stopt.
+            IsHitting = false;
+            AttackHitbox = Rectangle.Empty;
 
             // 1. Combo Timer
             if (!IsAttacking && _comboIndex > 0)
@@ -85,7 +89,6 @@ namespace test
             _wasAttackPressed = isAttackPressed;
 
             // 3. Beweging Input
-            // Mag alleen bewegen als je NIET aanvalt, OF als het een RunAttack is
             bool movementLocked = IsAttacking && _current != _runAttack;
 
             Velocity.X = 0;
@@ -101,15 +104,46 @@ namespace test
             Velocity.Y += gravity;
 
             Position.X += Velocity.X;
-            ResolveCollisionsX(blocks); // <-- HIER ZIT DE FIX VOOR HET LOPEN
+            ResolveCollisionsX(blocks);
 
             Position.Y += Velocity.Y;
             ResolveCollisionsY(blocks);
 
-            // 5. Animatie Status
+            // 5. Animatie Status Logic
             if (IsAttacking)
             {
-                // Check hier of de animatie in Animation.cs op IsFinished is gezet
+                // -- DAMAGE CHECK --
+                if (_current.DamageFrames.Contains(_current.CurrentFrame))
+                {
+                    IsHitting = true;
+
+                    int range = _current.AttackRange;
+                    int height = _current.AttackHeight;
+                    int attackX = (int)Position.X;
+                    int attackY = (int)Position.Y + 10;
+
+                    // FIX 2: Positie Berekening
+                    if (FacingRight)
+                    {
+                        // Rechts: Start bij Position.X + Breedte van de Hero
+                        attackX += HITBOX_WIDTH;
+                    }
+                    else
+                    {
+                        // Links: Start bij Position.X - Range (links van de speler)
+                        attackX -= range;
+                    }
+
+                    AttackHitbox = new Rectangle(attackX, attackY, range, height);
+
+                    // Slash Effect
+                    if (_current == _attack1 && _current.CurrentFrame == 5 && !_airSlashEffect.IsActive)
+                    {
+                        _airSlashEffect.Play(Position, FacingRight);
+                    }
+                }
+
+                // -- KLAAR CHECK --
                 if (_current.IsFinished)
                 {
                     IsAttacking = false;
@@ -121,14 +155,12 @@ namespace test
                         if (_comboIndex > 2) _comboIndex = 0;
                         _comboTimer = 0;
                     }
+
+                    // Schakel direct terug naar de juiste animatie om flikkeren te voorkomen
                     _current = (Velocity.X != 0) ? _run : _idle;
                 }
-
-                // Trigger Slash Effect logic
-                if (_current == _attack1 && _current.CurrentFrame == 5 && !_airSlashEffect.IsActive)
-                    _airSlashEffect.Play(Position, FacingRight);
             }
-            else
+            else // Niet aan het aanvallen
             {
                 if (!IsOnGround(blocks)) _current = _jump;
                 else if (Velocity.X != 0) _current = _run;
@@ -137,13 +169,18 @@ namespace test
 
             _current.Update(gameTime);
             _airSlashEffect.Update(gameTime);
+
+            // Altijd de hitbox updaten aan het einde
             Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
         }
 
         private void StartAttack()
         {
             IsAttacking = true;
-            if (Velocity.X != 0) _current = _runAttack;
+
+            // Check beweging
+            if (Velocity.X != 0 || IsRunningRight || IsRunningLeft)
+                _current = _runAttack;
             else
             {
                 if (_comboIndex == 0) _current = _attack1;
@@ -157,18 +194,16 @@ namespace test
         {
             Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
 
-            // Maak een 'Skinny' hitbox voor collision checks.
-            // We maken hem iets kleiner aan de boven- en onderkant.
-            // Hierdoor botst hij NIET tegen de vloer waar je op staat.
+            // Skinny Hitbox: Voorkomt dat we tegen de vloer botsen als we lopen
             Rectangle skinnyRect = Hitbox.HitboxRect;
-            skinnyRect.Y += 4;       // 4 pixels lager beginnen
-            skinnyRect.Height -= 8;  // 8 pixels kleiner (4 boven eraf, 4 onder eraf)
+            skinnyRect.Y += 4;
+            skinnyRect.Height -= 8;
 
             foreach (var block in blocks)
             {
                 if (block is ISolid)
                 {
-                    // Check tegen de skinny rect!
+                    // FIX 3: Check collision met de SKINNY rect, niet de volledige hitbox
                     if (skinnyRect.Intersects(block.BoundingBox))
                     {
                         Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, block.BoundingBox);
@@ -230,6 +265,7 @@ namespace test
 
         public void Draw(SpriteBatch sb)
         {
+            // Centreer sprite logic
             Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
             float widthDifference = currentFrame.Width - HITBOX_WIDTH;
             float drawX = Position.X - (widthDifference / 2);
