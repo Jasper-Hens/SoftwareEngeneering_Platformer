@@ -60,6 +60,14 @@ namespace test
         // slash animatie
         private Texture2D _slashTexture;
 
+        
+        // enemies 
+        private List<Enemy> _enemies;
+
+        // Boss Textures Variables
+        private Texture2D _bossIdle, _bossWalk, _bossRun, _bossJump;
+        private Texture2D _bossAtk1, _bossAtk2, _bossAtk3, _bossWalkAtk, _bossSpecial;
+        private Texture2D _bossHurt, _bossDeath;
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -100,15 +108,15 @@ namespace test
             // 50 kolommen breed (Index 0 tot 49)
             { 3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 0
             { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 1
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 2
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 3
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 4
-            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 5
-            { 0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 6 
-            { 0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 7
-            { 0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 8
-            { 0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 9
-            { 0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 10
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 2
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 3
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 4
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 5
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 6 
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 7
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 8
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 9
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, // 10
             { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }  // 11 (Onderste rij = Grond)
         };
 
@@ -163,6 +171,37 @@ namespace test
                         _blocks.Add(newBlock);
                     }
                 }
+                /////////////////////////////////////////////
+                _enemies = new List<Enemy>();
+
+                // 1. LAAD ALLE BOSS TEXTURES (Pas namen aan aan MGCB!)
+                _bossIdle = Content.Load<Texture2D>("Boss/Idle");
+                _bossWalk = Content.Load<Texture2D>("Boss/Walk");
+                _bossRun = Content.Load<Texture2D>("Boss/Run");
+                _bossJump = Content.Load<Texture2D>("Boss/Jump");
+
+                _bossAtk1 = Content.Load<Texture2D>("Boss/Attack"); // Attack 1
+                _bossAtk2 = Content.Load<Texture2D>("Boss/Attack2");
+                _bossAtk3 = Content.Load<Texture2D>("Boss/Attack3");
+
+                _bossWalkAtk = Content.Load<Texture2D>("Boss/Walk_Attack");
+                _bossSpecial = Content.Load<Texture2D>("Boss/Special");
+
+                _bossHurt = Content.Load<Texture2D>("Boss/Hurt");
+                _bossDeath = Content.Load<Texture2D>("Boss/Death");
+
+                // 2. MAAK DE BOSS AAN
+                // Geef ALLE textures mee in de juiste volgorde
+                KnightBoss boss = new KnightBoss(
+                    new Vector2(600, 500), // Start Positie
+                    _blokTexture,          // Pixel texture voor healthbar
+                    _bossIdle, _bossWalk, _bossRun, _bossJump,
+                    _bossAtk1, _bossAtk2, _bossAtk3,
+                    _bossWalkAtk, _bossSpecial,
+                    _bossHurt, _bossDeath
+                );
+
+                _enemies.Add(boss);
             }
 
             // BACKGROUND
@@ -234,6 +273,33 @@ namespace test
             // Camera volgen
             _camera.Follow(_hero.Position);
 
+            // Update Enemies
+            foreach (var enemy in _enemies)
+            {
+                enemy.Update(gameTime, _blocks, _hero);
+
+                // Damage Check (Hero slaat Enemy)
+                // Check of de BOSS de HERO raakt
+                if (enemy.IsHitting && !enemy.IsDead)
+                {
+                    // Gebruik de hitbox van de hero (HitboxRect)
+                    if (enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
+                    {
+                        // TODO: Maak een TakeDamage methode in Hero!
+                        // Voor nu even een console bericht of simpele logica
+                        System.Diagnostics.Debug.WriteLine("HERO IS GERAAKT DOOR BOSS!");
+
+                        // _hero.TakeDamage(20); 
+                    }
+                }
+
+                // Damage Check (Enemy raakt Hero) -> Moet je nog toevoegen in Hero!
+                if (!enemy.IsDead && enemy.Hitbox.Intersects(_hero.Hitbox.HitboxRect))
+                {
+                    // _hero.TakeDamage(1);
+                }
+            }
+
             base.Update(gameTime);
         }
 
@@ -243,40 +309,40 @@ namespace test
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // --- 1. Parallax Lagen (Sky, Nature) ---
+            // 1. Parallax (Achtergrond)
             _spriteBatch.Begin();
-
             _skyLayer.Draw(_spriteBatch, _camera.Position);
             _natureLayer.Draw(_spriteBatch, _camera.Position);
-
             _spriteBatch.End();
 
-
-            // --- 2. Vaste Lagen (Wall, Floor, Pillars), Tiles en Hero ---
+            // 2. De Wereld (Met Camera)
             _spriteBatch.Begin(transformMatrix: _camera.GetTransformMatrix());
 
-            // Teken eerst de vaste (niet-bewegende) achtergronddelen, achter de tiles
+            // Achtergrond lagen
             _wallLayer.Draw(_spriteBatch, _camera.Position);
-            // Teken de Floor over de Tiles en Hero heen (als voorgrond, om de tiles te bedekken)
-            _floorLayer.Draw(_spriteBatch, _camera.Position);
-            // Teken de Pillars over de Tiles en Hero heen (als voorgrond)
+            _floorLayer.Draw(_spriteBatch, _camera.Position); // Floor achter hero/enemies? Of ervoor?
+                                                              // (Jij wilde floor achter hero/enemies in vorige prompt, dus hier is prima)
+
+            // Pillars (achter de karakters?)
             _pillarsLayer.Draw(_spriteBatch, _camera.Position);
 
-            // Tiles (Level geometrie)
+            // Tiles
             foreach (var block in _blocks)
                 block.Draw(_spriteBatch);
 
             // Hero
             _hero.Draw(_spriteBatch);
 
+            foreach (var enemy in _enemies)
+            {
+                enemy.Draw(_spriteBatch);
+            }
+            // ---------------------------
+
             if (_hero.IsHitting)
             {
-                // Teken een semi-transparant rood blokje waar de klap valt
                 _spriteBatch.Draw(_blokTexture, _hero.AttackHitbox, Color.Red * 0.5f);
             }
-
-            // Hero hitbox debug
-            _spriteBatch.Draw(_blokTexture, _hero.Hitbox.HitboxRect, Color.Red * 0.4f);
 
             _spriteBatch.End();
 
