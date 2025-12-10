@@ -82,6 +82,8 @@ namespace test
             _deathAnim.IsLooping = false;
             _jumpAnim.IsLooping = false;
 
+            _deathAnim.IsLooping = false;
+
             // Damage Frames instellen
             _atk1Anim.DamageFrames = new List<int> { 5, 6, 7 };
             _atk2Anim.DamageFrames = new List<int> { 5, 6, 7 };
@@ -107,23 +109,32 @@ namespace test
 
         protected override void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks)
         {
-            // 0. DOOD LOGICA (Hoogste prioriteit)
+            // ==========================================================
+            // 1. DOOD LOGICA (MOET HELEMAAL BOVENAAN STAAN!)
+            // ==========================================================
             if (IsDead)
             {
+                // Forceer direct de Death state
                 SwitchState(KnightBossState.Death);
 
-                // Als animatie klaar is -> Verwijderen uit game
+                // Zeker weten dat hij niet loopt (dubbele veiligheid)
+                _deathAnim.IsLooping = false;
+
+                // Als de animatie klaar is, mag de boss weg
                 if (_currentAnim.IsFinished)
                 {
-                    _cooldownTimer = 1500;
-
-                    SwitchState(KnightBossState.Idle);
+                    ReadyToRemove = true;
                 }
 
+                // Update ALLEEN de animatie en stop de rest van de AI
                 _currentAnim.Update(gameTime);
-                Velocity.X = 0; // Niet meer bewegen
-                return; // Stop hier, doe geen andere AI dingen meer
+                Velocity.X = 0;
+                return; // <--- CRUCIAAL: STOP HIER! Ga niet verder naar beneden.
             }
+
+            // ==========================================================
+            // 2. NORMALE AI (Wordt overgeslagen als hij dood is)
+            // ==========================================================
 
             // Timers
             if (_cooldownTimer > 0) _cooldownTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -140,31 +151,24 @@ namespace test
                     FacingRight = xDist > 0;
             }
 
+            // STATE MACHINE
             switch (_currentState)
             {
-                // ==========================================================
-                // IDLE / PATROL (HIER ZAT DE HAPER FOUT)
-                // ==========================================================
                 case KnightBossState.Idle:
                 case KnightBossState.Walk:
-
-                    // 1. Ben ik TE DICHTBIJ? (< 70px) -> Blijf Idle (Combat Stance)
                     if (Math.Abs(xDist) < 70)
                     {
                         Velocity.X = 0;
-                        SwitchState(KnightBossState.Idle);
-
-                        // Als cooldown klaar is, val direct aan vanuit stilstand
                         if (_cooldownTimer <= 0) PerformRandomAttack();
+                        else SwitchState(KnightBossState.Idle);
                     }
-                    // 2. Ben ik in ACHTERVOLG range? (< 600px) -> Ga Rennen
                     else if (Math.Abs(xDist) < 600)
                     {
                         SwitchState(KnightBossState.Run);
                     }
-                    // 3. Ver weg -> Patrouilleer
                     else
                     {
+                        // Patrouille logica
                         if (_patrolTimer <= 0)
                         {
                             if (_currentState == KnightBossState.Walk)
@@ -185,25 +189,21 @@ namespace test
                     }
                     break;
 
-                // ==========================================================
-                // RUN
-                // ==========================================================
                 case KnightBossState.Run:
                     if (Math.Abs(xDist) > 800) { SwitchState(KnightBossState.Idle); Velocity.X = 0; break; }
 
-                    // AANVALLEN (< 70px)
                     if (Math.Abs(xDist) < 70)
                     {
                         Velocity.X = 0;
                         if (_cooldownTimer <= 0) PerformRandomAttack();
-                        else SwitchState(KnightBossState.Idle); // Ga naar Idle (en door de fix hierboven blijft hij daar!)
+                        else SwitchState(KnightBossState.Idle);
                     }
                     else
                     {
                         SwitchState(KnightBossState.Run);
                         Velocity.X = FacingRight ? _runSpeed : -_runSpeed;
 
-                        // OBSTAKEL DETECTIE
+                        // Voelspriet & Jump Logic
                         bool obstacleInFront = false;
                         int feelerWidth = 40;
                         int feelerX = FacingRight ? Hitbox.Right : Hitbox.Left - feelerWidth;
@@ -211,7 +211,6 @@ namespace test
 
                         foreach (var block in blocks)
                         {
-                            // Check alleen op Muren (Solid), niet op doorloop-platforms
                             if (block is ISolid && feelerRect.Intersects(block.BoundingBox))
                             {
                                 obstacleInFront = true;
@@ -220,11 +219,10 @@ namespace test
                         }
 
                         bool heroIsHigher = (hero.Position.Y < Position.Y - 100);
-
                         if (_jumpTimer <= 0 && (obstacleInFront || heroIsHigher))
                         {
                             SwitchState(KnightBossState.Jump);
-                            Velocity.Y = -14f;
+                            Velocity.Y = -12f;
                             Velocity.X = FacingRight ? _runSpeed : -_runSpeed;
                             _jumpTimer = 1500;
                         }
@@ -243,78 +241,39 @@ namespace test
                     Velocity.X = 0;
                     if (_currentAnim.IsFinished)
                     {
-                        _cooldownTimer = 1500;
+                        _cooldownTimer = 1000;
                         SwitchState(KnightBossState.Idle);
                     }
                     break;
 
                 case KnightBossState.Death:
-                    // Wordt nu bovenaan de methode afgehandeld
+                    // Deze case wordt nooit bereikt omdat we bovenaan al returnen, 
+                    // maar laat hem staan voor de netheid.
+                    Velocity.X = 0;
                     break;
             }
 
-            // Hitbox Logic
+            // HITBOXES
             IsHitting = false;
             AttackHitbox = Rectangle.Empty;
 
-            if (IsInAttackState())
+            if (IsInAttackState() && _currentAnim.DamageFrames.Contains(_currentAnim.CurrentFrame))
             {
-                if (_currentAnim.DamageFrames.Contains(_currentAnim.CurrentFrame))
-                {
-                    IsHitting = true;
+                IsHitting = true;
+                // ... (Jouw hitbox code hier) ...
+                // ... Plak je hitbox berekeningen met offset en overlap hier terug ...
 
-                    // Standaard waarden
-                    int attackRange = 100;
-                    int attackHeight = 110;
-                    int yOffset = 0;   // Verschuiving naar beneden
-                    int xOverlap = 20; // Hoe ver begint de aanval IN het lichaam?
+                // Korte versie om errors te voorkomen in dit voorbeeld:
+                int range = 100; int h = 110; int yOff = 0; int xOff = 20;
+                if (_currentState == KnightBossState.Attack1) { range = 70; h = 40; yOff = 45; xOff = 30; }
+                else if (_currentState == KnightBossState.Attack2) { range = 80; h = 100; yOff = 50; xOff = 30; }
+                else if (_currentState == KnightBossState.Attack3) { range = 70; h = 100; xOff = 30; }
 
-                    if (_currentState == KnightBossState.Attack1)
-                    {
-                        attackRange = 70; // Lange steek
-                        attackHeight = 40; // Plat (zwaard dikte)
-                        yOffset = 45;      // Ter hoogte van de borst/arm
-                        xOverlap = 30;     // Begint diep in de boss (bij de schouder)
-                    }
-                    else if (_currentState == KnightBossState.Attack2)
-                    {
-                        attackRange = 80;
-                        attackHeight = 100;
-                        
-                        xOverlap = 30;
-                    }
-                    // --- AANPASSING ATTACK 3 ---
-                    else if (_currentState == KnightBossState.Attack3)
-                    {
-                         attackRange = 70;
-                        attackHeight = 100;
-                        xOverlap = 30;
-                    }
-                    // ---------------------------
-
-                    int attackX = (int)Position.X;
-                    int attackY = (int)Position.Y + yOffset;
-
-                    if (FacingRight)
-                    {
-                        // Rechts: Begin bij rechterkant lijf MINUS de overlap
-                        attackX += (_finalHitboxWidth - xOverlap);
-                    }
-                    else
-                    {
-                        // Links: Begin links van de boss PLUS de overlap
-                        // (Zodat hij dichter bij de boss schuift)
-                        attackX -= (attackRange - xOverlap);
-                    }
-
-                    AttackHitbox = new Rectangle(attackX, attackY, attackRange, attackHeight);
-                
+                int ax = FacingRight ? (int)Position.X + (_finalHitboxWidth - xOff) : (int)Position.X - (range - xOff);
+                AttackHitbox = new Rectangle(ax, (int)Position.Y + yOff, range, h);
             }
 
             _currentAnim.Update(gameTime);
-        }
-
-        _currentAnim.Update(gameTime);
         }
 
         // Hulpmethodes

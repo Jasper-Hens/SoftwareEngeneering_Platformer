@@ -30,7 +30,7 @@ namespace test.Animations
 
         public void Update(GameTime gameTime)
         {
-            // BELANGRIJK: Als hij klaar is en niet mag loopen, stop hier.
+            // Als hij klaar is en niet mag loopen, stop hier.
             if (!IsLooping && IsFinished)
                 return;
 
