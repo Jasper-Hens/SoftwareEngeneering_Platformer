@@ -12,6 +12,11 @@ namespace test.Animations.BossAnimations
     {
         public BossRunAnimation(Texture2D texture) : base(texture)
         {
+            IsLooping = true;
+
+            // HOGER OM TE VERTRAGEN
+            // 120ms : elke sprite blijft 0.12 seconde .
+            FrameSpeed = 120;
             Frames.Add(new Rectangle(69, 157, 112, 99));      // 1 (sprite12)
             Frames.Add(new Rectangle(323, 161, 112, 95));     // 2 (sprite20)
             Frames.Add(new Rectangle(579, 158, 112, 96));     // 3 (sprite15)

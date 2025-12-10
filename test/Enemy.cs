@@ -1,5 +1,4 @@
-﻿// Bestand: test/Enemy.cs
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using test.Blocks;
@@ -12,7 +11,10 @@ namespace test
         public Vector2 Position;
         public Vector2 Velocity;
         public bool FacingRight = false;
+
+        // Status
         public bool IsDead = false;
+        public bool ReadyToRemove { get; protected set; } = false; // NIEUW: Voor verdwijnen
 
         public int MaxHealth { get; protected set; }
         public int CurrentHealth { get; protected set; }
@@ -34,22 +36,23 @@ namespace test
 
         public virtual void Update(GameTime gameTime, List<Block> blocks, Hero hero)
         {
-            if (IsDead) return;
+            // OUDE FOUT: if (IsDead) return; <--- VERWIJDER DEZE REGEL!
+            // We moeten blijven updaten om de Death animatie af te spelen.
 
+            // 1. Visuals
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
                 _color = (_invincibilityTimer % 200 < 100) ? Color.Red : Color.White;
             }
-            else
-            {
-                _color = Color.White;
-            }
+            else _color = Color.White;
 
+            // 2. Physics
             Velocity.Y += _gravity;
 
-            UpdateAI(gameTime, hero);
+            UpdateAI(gameTime, hero, blocks); // Boss logica
 
+            // 3. Beweging
             Position.X += Velocity.X;
             ResolveCollisionsX(blocks);
 
@@ -69,23 +72,22 @@ namespace test
                 {
                     CurrentHealth = 0;
                     IsDead = true;
+                    // Let op: De KnightBoss klasse zet de State straks op 'Death'
                 }
             }
         }
 
-        // =========================================================
-        // ABSTRACTE METHODES (Deze MOETEN in KnightBoss staan!)
-        // =========================================================
-        protected abstract void UpdateAI(GameTime gameTime, Hero hero);
+        protected abstract void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks);
         protected abstract void UpdateHitbox();
         public abstract void Draw(SpriteBatch sb);
 
-        // --- COLLISION LOGICA ---
+        // --- COLLISION ---
         protected void ResolveCollisionsX(List<Block> blocks)
         {
             UpdateHitbox();
             foreach (var block in blocks)
             {
+                // Alleen botsen tegen SOLID blokken (Muren), niet tegen Platforms (waar je doorheen loopt)
                 if (block is ISolid && Hitbox.Intersects(block.BoundingBox))
                 {
                     Rectangle intersection = Rectangle.Intersect(Hitbox, block.BoundingBox);

@@ -12,6 +12,8 @@ namespace test.Animations.BossAnimations
     {
         public BossJumpAnimation(Texture2D texture) : base(texture)
         {
+            IsLooping = false;
+            FrameSpeed = 130;
             Frames.Add(new Rectangle(89, 146, 112, 110));      // 1 (sprite5)
             Frames.Add(new Rectangle(354, 159, 131, 97));      // 2 (sprite17)
             Frames.Add(new Rectangle(609, 159, 132, 97));      // 3 (sprite18)

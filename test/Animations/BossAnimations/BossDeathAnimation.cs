@@ -12,6 +12,8 @@ namespace test.Animations.BossAnimations
     {
         public BossDeathAnimation(Texture2D texture) : base(texture)
         {
+            IsLooping = false;
+            FrameSpeed = 500;
             Frames.Add(new Rectangle(83, 145, 118, 104));    // 1 (sprite15)
             Frames.Add(new Rectangle(332, 145, 124, 106));   // 2 (sprite12)
             Frames.Add(new Rectangle(588, 145, 124, 100));   // 3 (sprite16)

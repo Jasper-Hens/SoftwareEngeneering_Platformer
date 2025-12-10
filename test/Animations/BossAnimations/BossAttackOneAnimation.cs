@@ -12,6 +12,8 @@ namespace test.Animations.BossAnimations
     {
         public BossAttackOneAnimation(Texture2D texture) : base(texture)
         {
+            IsLooping = false;
+            FrameSpeed = 150;
             Frames.Add(new Rectangle(89, 146, 112, 110));    // 1 (sprite10)
             Frames.Add(new Rectangle(330, 151, 124, 105));   // 2 (sprite17)
             Frames.Add(new Rectangle(583, 151, 123, 105));   // 3 (sprite18)

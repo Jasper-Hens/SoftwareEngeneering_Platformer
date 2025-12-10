@@ -8,7 +8,7 @@ namespace test.Animations.BossAnimations
         public BossIdleAnimation(Texture2D texture) : base(texture)
         {
             IsLooping = true;
-            FrameSpeed = 120; // Bosses bewegen vaak zwaar en traag
+            FrameSpeed = 200;
 
             Frames.Add(new Rectangle(89, 146, 112, 110));
             Frames.Add(new Rectangle(345, 151, 112, 105));

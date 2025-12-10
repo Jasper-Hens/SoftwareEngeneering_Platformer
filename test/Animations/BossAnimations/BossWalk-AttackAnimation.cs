@@ -12,6 +12,8 @@ namespace test.Animations.BossAnimations
     {
         public BossWalk_AttackAnimation(Texture2D texture) : base(texture)
         {
+            IsLooping = false;
+            FrameSpeed = 200;
             Frames.Add(new Rectangle(82, 130, 119, 110));      // 1 (sprite15)
             Frames.Add(new Rectangle(330, 130, 124, 106));     // 2 (sprite21)
             Frames.Add(new Rectangle(583, 130, 123, 107));     // 3 (sprite19)
