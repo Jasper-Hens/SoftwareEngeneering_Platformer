@@ -361,6 +361,42 @@
 /processorParam:TextureFormat=Color
 /build:Objects/ObjectSpriteSheet.png
 
+#begin PlayerHUD/PlayerHealthBrokenShieldV3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PlayerHUD/PlayerHealthBrokenShieldV3.png
+
+#begin PlayerHUD/PlayerHealthFullV3-Photoroom.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PlayerHUD/PlayerHealthFullV3-Photoroom.png
+
+#begin PlayerHUD/PlayerHealthHalfV3-Photoroom.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PlayerHUD/PlayerHealthHalfV3-Photoroom.png
+
 #begin Roll.png
 /importer:TextureImporter
 /processor:TextureProcessor
