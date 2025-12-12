@@ -265,6 +265,30 @@
 /processorParam:TextureFormat=Color
 /build:HomeScreen/HomeScreenPlatformer.png
 
+#begin HomeScreen/PlayButton.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:HomeScreen/PlayButton.png
+
+#begin HomeScreen/PlayButtonPressed.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:HomeScreen/PlayButtonPressed.png
+
 #begin Hurt.png
 /importer:TextureImporter
 /processor:TextureProcessor

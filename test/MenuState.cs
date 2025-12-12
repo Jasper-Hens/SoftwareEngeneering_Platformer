@@ -7,7 +7,9 @@ namespace test.States
 {
     public class MenuState : GameState
     {
-        private Texture2D _buttonTexture;
+        private Texture2D _backgroundTexture;
+        private Texture2D _playButtonTexture;
+
         private Vector2 _buttonPosition;
         private Rectangle _buttonRect;
         private Color _buttonColor = Color.White;
@@ -18,15 +20,24 @@ namespace test.States
 
         public override void LoadContent()
         {
-            // Laad een texture voor de knop. 
-            // TIP: Gebruik tijdelijk je blok texture als je nog geen knop-plaatje hebt.
-            _buttonTexture = _content.Load<Texture2D>("Tiles/tilesSpriteSheet"); // Of een specifieke knop texture
 
-            // Zet de knop in het midden
-            int btnWidth = 200;
-            int btnHeight = 80;
+            // ZORG DAT DE MUIS ZICHTBAAR IS
+            _game.IsMouseVisible = true;
+
+            // 1. ACHTERGROND
+           
+            _backgroundTexture = _content.Load<Texture2D>("HomeScreen/HomeScreenPlatformer");
+
+            // 2PLAY KNOP
+            _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton"); 
+
+            // 3. POSITIE BEPALEN (Midden van scherm)
             int screenW = _game.GraphicsDevice.Viewport.Width;
             int screenH = _game.GraphicsDevice.Viewport.Height;
+
+            // Hoe groot wil je de knop? (Pas dit aan aan de grootte van je plaatje)
+            int btnWidth = 200;
+            int btnHeight = 100;
 
             _buttonPosition = new Vector2((screenW / 2) - (btnWidth / 2), (screenH / 2) - (btnHeight / 2));
             _buttonRect = new Rectangle((int)_buttonPosition.X, (int)_buttonPosition.Y, btnWidth, btnHeight);
@@ -39,28 +50,36 @@ namespace test.States
             // Check of muis op de knop staat
             if (_buttonRect.Contains(mouse.Position))
             {
-                _buttonColor = Color.Gray; // Hover effect
+                //_buttonColor = Color.Red; // Maak knop donkerder als je erop zweeft (Hover effect)
+                _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButtonPressed"); 
 
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
-                    // === HIER SCHAKELEN WE NAAR DE GAME ===
+                    // START DE GAME
                     _game.ChangeState(new PlayingState(_game, _content));
                 }
             }
             else
             {
-                _buttonColor = Color.White;
+                _buttonColor = Color.White; // Normale kleur
+                _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton");
             }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            // Teken het menu zonder camera (gewoon plat op scherm)
             spriteBatch.Begin();
 
-            // Teken de knop
-            // (Ik gebruik hier een deel van je tilesheet als voorbeeld, pas source rect aan naar wens)
-            spriteBatch.Draw(_buttonTexture, _buttonRect, _buttonColor);
+            // TEKENd ACHTERGROND (Scalen naar schermgrootte)
+            // Dit zorgt ervoor dat het plaatje altijd het hele scherm vult, ongeacht de resolutie.
+            int screenW = _game.GraphicsDevice.Viewport.Width;
+            int screenH = _game.GraphicsDevice.Viewport.Height;
+            Rectangle destRect = new Rectangle(0, 0, screenW, screenH);
+
+            spriteBatch.Draw(_backgroundTexture, destRect, Color.White);
+
+            // 2. TEKEN DE PLAY KNOP
+            spriteBatch.Draw(_playButtonTexture, _buttonRect, _buttonColor);
 
             spriteBatch.End();
         }

@@ -21,7 +21,7 @@ namespace test.Animations.BossAnimations
             Frames.Add(new Rectangle(1100, 145, 124, 14));   // 5 (sprite45)
             Frames.Add(new Rectangle(1356, 191, 124, 14));   // 6 (sprite46)
             Frames.Add(new Rectangle(1612, 211, 124, 14));   // 7 (sprite47)
-            Frames.Add(new Rectangle(1868, 242, 124, 14));   // 8 (sprite48)
+            //Frames.Add(new Rectangle(1868, 242, 124, 14));   // 8 (sprite48)
 
         }
     }
