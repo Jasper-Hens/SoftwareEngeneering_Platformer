@@ -65,21 +65,18 @@ namespace test.Animations
             IsFinished = false; // Reset het vlaggetje
         }
 
-        public void Draw(SpriteBatch sb, Vector2 position, bool facingRight)
+        // In Animation.cs
+        public void Draw(SpriteBatch sb, Vector2 position, bool facingRight, Color color) // <--- NIEUW: Color parameter
         {
-            // Zorg dat deze offset logica klopt met jouw game (bijv. 65px hoogte)
             var flip = facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-
-            // Constante voor Y-offset (zorg dat dit matcht met jouw max hoogte)
             const int MAX_FRAME_HEIGHT = 65;
 
             Rectangle currentFrameRect = Frames[CurrentFrame];
             float yOffset = MAX_FRAME_HEIGHT - currentFrameRect.Height;
-
-            // Gebruik de positie + offset
             Vector2 drawPosition = new Vector2(position.X, position.Y + yOffset);
 
-            sb.Draw(Texture, drawPosition, currentFrameRect, Color.White, 0f, Vector2.Zero, 1f, flip, 0f);
+            // Gebruik hier de variabele 'color' in plaats van Color.White
+            sb.Draw(Texture, drawPosition, currentFrameRect, color, 0f, Vector2.Zero, 1f, flip, 0f);
         }
     }
 }

@@ -373,7 +373,7 @@
 /processorParam:TextureFormat=Color
 /build:PlayerHUD/PlayerHealthBrokenShieldV3.png
 
-#begin PlayerHUD/PlayerHealthFullV3-Photoroom.png
+#begin PlayerHUD/PlayerHealthFullV3.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -383,9 +383,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:PlayerHUD/PlayerHealthFullV3-Photoroom.png
+/build:PlayerHUD/PlayerHealthFullV3.png
 
-#begin PlayerHUD/PlayerHealthHalfV3-Photoroom.png
+#begin PlayerHUD/PlayerHealthHalfV3.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -395,7 +395,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:PlayerHUD/PlayerHealthHalfV3-Photoroom.png
+/build:PlayerHUD/PlayerHealthHalfV3.png
 
 #begin Roll.png
 /importer:TextureImporter

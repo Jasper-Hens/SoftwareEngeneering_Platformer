@@ -55,6 +55,10 @@ namespace test.States
         private const int TILE_SIZE = 64;
         private int _levelWidth, _levelHeight;
 
+        // player HUD
+        private Texture2D _texShieldFull, _texShieldHalf, _texShieldEmpty;
+        private HeadsUpDisplay _hud;
+
         public PlayingState(Game1 game, ContentManager content) : base(game, content)
         {
             _blocks = new List<Block>();
@@ -76,6 +80,14 @@ namespace test.States
                 _levelWidth,
                 _levelHeight
             );
+
+            // hud
+            _texShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
+            _texShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
+            _texShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
+
+            // 3. Initialiseer de HUD
+            _hud = new HeadsUpDisplay(_texShieldFull, _texShieldHalf, _texShieldEmpty);
 
             // 3. Textures Laden (Gebruik _content!)
             _idleTexture = _content.Load<Texture2D>("Idle");
@@ -124,6 +136,7 @@ namespace test.States
                 }
             }
 
+
             // 7. Boss Aanmaken
             KnightBoss boss = new KnightBoss(
                 new Vector2(600, 500),
@@ -164,31 +177,36 @@ namespace test.States
             _hero.Update(gameTime, _blocks);
             _camera.Follow(_hero.Position);
 
-            // Enemies Update Loop
+            // --- Eén grote loop voor alle vijanden ---
+            // We tellen achteruit (i--) zodat we vijanden veilig kunnen verwijderen als ze dood zijn.
             for (int i = _enemies.Count - 1; i >= 0; i--)
             {
-                var enemy = _enemies[i];
+                var enemy = _enemies[i]; // Hier definiëren we 'enemy' één keer.
+
                 enemy.Update(gameTime, _blocks, _hero);
 
-                // HERO RAAKT BOSS
+                // LOGICA 1: HERO RAAKT BOSS (Jouw oude code)
                 if (_hero.IsHitting && !enemy.IsDead)
                 {
                     if (_hero.AttackHitbox.Intersects(enemy.Hitbox))
                     {
-                        enemy.TakeDamage(10);
+                        enemy.TakeDamage(10); // Boss krijgt schade
                         System.Diagnostics.Debug.WriteLine($"RAAK! Boss HP: {enemy.CurrentHealth}");
                     }
                 }
 
-                // BOSS RAAKT HERO
+                // LOGICA 2: BOSS RAAKT HERO (De NIEUWE code)
                 if (enemy.IsHitting && !enemy.IsDead)
                 {
+                    // We checken of de aanval van de boss de hitbox van de hero raakt
                     if (enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
                     {
-                        System.Diagnostics.Debug.WriteLine("AU! Hero hit!");
+                        _hero.TakeDamage(1); // Hero verliest 1 HP (half schildje)
+                        System.Diagnostics.Debug.WriteLine($"AU! Hero HP: {_hero.CurrentHealth}");
                     }
                 }
 
+                // LOGICA 3: OPRUIMEN
                 if (enemy.ReadyToRemove)
                 {
                     _enemies.RemoveAt(i);
@@ -198,29 +216,29 @@ namespace test.States
 
         public override void Draw(SpriteBatch sb)
         {
-            // 1. Parallax
+            // 1. Parallax (Bestaand)
             sb.Begin();
             _skyLayer.Draw(sb, _camera.Position);
             _natureLayer.Draw(sb, _camera.Position);
             sb.End();
 
-            // 2. Wereld
-            sb.Begin(transformMatrix: _camera.GetTransformMatrix());
+            // 2. Wereld & Hero & Boss (MET CAMERA)
+            sb.Begin(transformMatrix: _camera.GetTransformMatrix()); // <--- Camera Matrix AAN
 
             _wallLayer.Draw(sb, _camera.Position);
             _floorLayer.Draw(sb, _camera.Position);
             _pillarsLayer.Draw(sb, _camera.Position);
-
             foreach (var block in _blocks) block.Draw(sb);
 
-            _hero.Draw(sb);
-
+            _hero.Draw(sb); // Tekent nu rood als hij pijn heeft
             foreach (var enemy in _enemies) enemy.Draw(sb);
 
-            if (_hero.IsHitting)
-            {
-                sb.Draw(_blokTexture, _hero.AttackHitbox, Color.Red * 0.5f);
-            }
+            sb.End(); // <--- Camera Matrix UIT
+
+            // 3. HUD / UI (ZONDER CAMERA - STATISCH)
+            sb.Begin(); // Nieuwe, 'platte' spritebatch
+
+            _hud.Draw(sb, _hero.CurrentHealth, _hero.MaxHealth);
 
             sb.End();
         }
