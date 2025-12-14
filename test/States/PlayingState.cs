@@ -59,6 +59,10 @@ namespace test.States
         private Texture2D _texShieldFull, _texShieldHalf, _texShieldEmpty;
         private HeadsUpDisplay _hud;
 
+        // game over
+        private double _endGameTimer = 0;
+        private bool _isGameOver = false;
+
         public PlayingState(Game1 game, ContentManager content) : base(game, content)
         {
             _blocks = new List<Block>();
@@ -125,8 +129,6 @@ namespace test.States
             _hud = new HeadsUpDisplay(_texShieldFull, _texShieldHalf, _texShieldEmpty, _blokTexture);
 
 
-
-
             // 5. Hero Aanmaken
             _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture, _rollTexture);
             _hero.Position = new Vector2(100, 300);
@@ -155,7 +157,6 @@ namespace test.States
             _enemies.Add(boss);
 
             // 8. Achtergrond Lagen Instellen
-            // Let op: Gebruik _game.GraphicsDevice.Viewport.Width/Height
             int vpW = _game.GraphicsDevice.Viewport.Width;
             int vpH = _game.GraphicsDevice.Viewport.Height;
 
@@ -174,6 +175,7 @@ namespace test.States
 
         public override void Update(GameTime gameTime)
         {
+            // 1. HERO UPDATE & INPUT
             KeyboardState k = Keyboard.GetState();
 
             _hero.IsRunningRight = k.IsKeyDown(Keys.Right);
@@ -183,39 +185,70 @@ namespace test.States
             _hero.Update(gameTime, _blocks);
             _camera.Follow(_hero.Position);
 
-            // --- Eén grote loop voor alle vijanden ---
-            // We tellen achteruit (i--) zodat we vijanden veilig kunnen verwijderen als ze dood zijn.
+            // 2. ENEMY LOOP (VECHTEN & SCHADE)
             for (int i = _enemies.Count - 1; i >= 0; i--)
             {
-                var enemy = _enemies[i]; // Hier definiëren we 'enemy' één keer.
-
+                var enemy = _enemies[i];
                 enemy.Update(gameTime, _blocks, _hero);
 
-                // LOGICA 1: HERO RAAKT BOSS (Jouw oude code)
+                // A. Hero raakt Boss
                 if (_hero.IsHitting && !enemy.IsDead)
                 {
                     if (_hero.AttackHitbox.Intersects(enemy.Hitbox))
                     {
-                        enemy.TakeDamage(10); // Boss krijgt schade
+                        // DAMAGE AANPASSEN
+                        enemy.TakeDamage(100);
                         System.Diagnostics.Debug.WriteLine($"RAAK! Boss HP: {enemy.CurrentHealth}");
                     }
                 }
 
-                // LOGICA 2: BOSS RAAKT HERO (De NIEUWE code)
+                // B. Boss raakt Hero
                 if (enemy.IsHitting && !enemy.IsDead)
                 {
-                    // We checken of de aanval van de boss de hitbox van de hero raakt
                     if (enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
                     {
-                        _hero.TakeDamage(1); // Hero verliest 1 HP (half schildje)
-                        System.Diagnostics.Debug.WriteLine($"AU! Hero HP: {_hero.CurrentHealth}");
+                        _hero.TakeDamage(1);
                     }
                 }
 
-                // LOGICA 3: OPRUIMEN
+                // C. Opruimen als Boss klaar is met doodgaan (animatie afgelopen)
                 if (enemy.ReadyToRemove)
                 {
                     _enemies.RemoveAt(i);
+                }
+            }
+
+            // CHECK A: IS HERO DOOD?
+            if (_hero.IsDead && !_isGameOver)
+            {
+                _isGameOver = true;
+                _endGameTimer = 2000; // Wacht 2 seconden na doodgaan
+            }
+
+            // CHECK B: ZIJN ALLE VIJANDEN VERSLAGEN? (VICTORY)
+            if (_enemies.Count == 0 && !_isGameOver)
+            {
+                _isGameOver = true;
+                _endGameTimer = 1000; // Wacht 1 seconde na verdwijnen boss
+            }
+
+            // TIMER LOGICA
+            if (_isGameOver)
+            {
+                _endGameTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
+
+                if (_endGameTimer <= 0)
+                {
+                    if (_hero.IsDead)
+                    {
+                        // dood -> Game Over
+                        _game.ChangeState(new GameOverState(_game, _content));
+                    }
+                    else
+                    {
+                        // Vijanden op -> Victory
+                        _game.ChangeState(new WinState(_game, _content));
+                    }
                 }
             }
         }
