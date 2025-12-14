@@ -31,11 +31,11 @@ namespace test.States
 
         // VARIABELEN
         private Texture2D _idleTexture, _runTexture, _jumpTexture, _blokTexture;
-        private Texture2D _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture;
+        private Texture2D _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture, _rollTexture;
 
         // Background Textures
         private Texture2D _tilesSpriteSheet, _brightBackGroundSpriteSheet, _paleBackGroundSpriteSheet;
-        private Texture2D _ItemSpriteSheet, _ObjectSpriteSheet; // Worden deze gebruikt?
+        private Texture2D _ItemSpriteSheet, _ObjectSpriteSheet; 
 
         // Boss Textures
         private Texture2D _bossIdle, _bossWalk, _bossRun, _bossJump;
@@ -81,13 +81,6 @@ namespace test.States
                 _levelHeight
             );
 
-            // hud
-            _texShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
-            _texShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
-            _texShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
-
-            // 3. Initialiseer de HUD
-            _hud = new HeadsUpDisplay(_texShieldFull, _texShieldHalf, _texShieldEmpty);
 
             // 3. Textures Laden (Gebruik _content!)
             _idleTexture = _content.Load<Texture2D>("Idle");
@@ -99,6 +92,7 @@ namespace test.States
             _attack3Texture = _content.Load<Texture2D>("Attacks/Attack 3");
             _runAttackTexture = _content.Load<Texture2D>("Attacks/Run+Attack");
             _slashTexture = _content.Load<Texture2D>("Attacks/SlashSprite");
+            _rollTexture = _content.Load<Texture2D>("Roll");
 
             _tilesSpriteSheet = _content.Load<Texture2D>("Tiles/tilesSpriteSheet");
             _paleBackGroundSpriteSheet = _content.Load<Texture2D>("Background/paleBackgroundSpriteSheet");
@@ -121,8 +115,20 @@ namespace test.States
             _blokTexture = new Texture2D(_game.GraphicsDevice, 1, 1);
             _blokTexture.SetData(new[] { Color.White });
 
+
+            // hud
+            _texShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
+            _texShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
+            _texShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
+
+            
+            _hud = new HeadsUpDisplay(_texShieldFull, _texShieldHalf, _texShieldEmpty, _blokTexture);
+
+
+
+
             // 5. Hero Aanmaken
-            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture);
+            _hero = new Hero(_idleTexture, _runTexture, _jumpTexture, _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture, _rollTexture);
             _hero.Position = new Vector2(100, 300);
 
             // 6. Level Genereren
@@ -238,7 +244,7 @@ namespace test.States
             // 3. HUD / UI (ZONDER CAMERA - STATISCH)
             sb.Begin(); // Nieuwe, 'platte' spritebatch
 
-            _hud.Draw(sb, _hero.CurrentHealth, _hero.MaxHealth);
+            _hud.Draw(sb, _hero.CurrentHealth, _hero.MaxHealth, _hero.CurrentStamina, _hero.MaxStamina);
 
             sb.End();
         }

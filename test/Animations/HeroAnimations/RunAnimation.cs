@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace test.Animations
+namespace test.Animations.HeroAnimations
 {
     public class RunAnimation : Animation
     {

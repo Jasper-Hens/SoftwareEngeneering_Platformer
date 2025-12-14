@@ -56,7 +56,7 @@ namespace test
                           Texture2D atk1Tex, Texture2D atk2Tex, Texture2D atk3Tex,
                           Texture2D walkAtkTex, Texture2D specialTex,
                           Texture2D hurtTex, Texture2D deathTex)
-            : base(startPos, 200)
+            : base(startPos, 200) //----------------------------------------------------------------------START POSITION---------------------------------------------------------------------------------
         {
             _pixelTexture = pixelTex;
 
@@ -100,18 +100,10 @@ namespace test
             Hitbox = new Rectangle((int)Position.X, (int)Position.Y, _finalHitboxWidth, _finalHitboxHeight);
         }
 
-        // ================================================================================================
-        // UPDATE AI LOGICA (Compleet & Gefixt)
-        // ================================================================================================
-        // Vervang de UpdateAI methode met deze versie:
-
-        // Vervang de UpdateAI methode met deze versie:
 
         protected override void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks)
         {
-            // ==========================================================
-            // 1. DOOD LOGICA (MOET HELEMAAL BOVENAAN STAAN!)
-            // ==========================================================
+
             if (IsDead)
             {
                 // Forceer direct de Death state
@@ -132,9 +124,6 @@ namespace test
                 return; // <--- CRUCIAAL: STOP HIER! Ga niet verder naar beneden.
             }
 
-            // ==========================================================
-            // 2. NORMALE AI (Wordt overgeslagen als hij dood is)
-            // ==========================================================
 
             // Timers
             if (_cooldownTimer > 0) _cooldownTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
