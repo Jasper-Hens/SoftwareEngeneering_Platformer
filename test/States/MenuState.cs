@@ -36,10 +36,10 @@ namespace test.States
             int screenH = _game.GraphicsDevice.Viewport.Height;
 
             // Hoe groot wil je de knop? (Pas dit aan aan de grootte van je plaatje)
-            int btnWidth = 200;
-            int btnHeight = 100;
+            int btnWidth = 246;
+            int btnHeight = 102;
 
-            _buttonPosition = new Vector2((screenW / 2) - (btnWidth / 2), (screenH / 2) - (btnHeight / 2));
+            _buttonPosition = new Vector2((screenW / 2) - (btnWidth / 2), (screenH / 1) - 70 - (btnHeight / 2));
             _buttonRect = new Rectangle((int)_buttonPosition.X, (int)_buttonPosition.Y, btnWidth, btnHeight);
         }
 
