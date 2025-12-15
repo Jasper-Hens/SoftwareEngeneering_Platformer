@@ -5,14 +5,18 @@ using Microsoft.Xna.Framework.Input;
 
 namespace test.States
 {
-
     public class GameOverState : GameState
     {
         private Texture2D _backgroundTexture;
-        private Texture2D _restartButtonTexture;
 
-        private Vector2 _buttonPosition;
-        private Rectangle _buttonRect;
+        // Textures voor Play Again knop
+        private Texture2D _playAgainTexture, _playAgainTexturePressed, _currentPlayAgainTexture;
+
+        // Textures voor Home knop
+        private Texture2D _homeTexture, _homeTexturePressed, _currentHomeTexture;
+
+        private Rectangle _playAgainRect;
+        private Rectangle _homeRect;
 
         public GameOverState(Game1 game, ContentManager content) : base(game, content)
         {
@@ -22,42 +26,69 @@ namespace test.States
         {
             _game.IsMouseVisible = true;
 
-            // Laad de GameOver texture
+            // 1. Laad de Achtergrond
             _backgroundTexture = _content.Load<Texture2D>("GameState/GameOver");
-            // Laad de Restart knop (of PlayButton)
-            _restartButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton");
 
+            // 2. Laad de knoppen (Let op de bestandsnamen uit je Content.mgcb)
+            _playAgainTexture = _content.Load<Texture2D>("HomeScreen/PlayAgainButton - kopie");
+            _playAgainTexturePressed = _content.Load<Texture2D>("HomeScreen/PlayAgainButtonPressed - kopie");
+
+            _homeTexture = _content.Load<Texture2D>("HomeScreen/HomeButton - kopie");
+            _homeTexturePressed = _content.Load<Texture2D>("HomeScreen/HomeButtonPressed - kopie");
+
+            // Standaard textures instellen
+            _currentPlayAgainTexture = _playAgainTexture;
+            _currentHomeTexture = _homeTexture;
+
+            // 3. Posities bepalen (Naast elkaar of onder elkaar)
             int screenW = _game.GraphicsDevice.Viewport.Width;
             int screenH = _game.GraphicsDevice.Viewport.Height;
 
-            int btnWidth = 200;
-            int btnHeight = 100;
+            int btnWidth = 200; // Pas aan naar wens
+            int btnHeight = 80;
+            int spacing = 20;   // Ruimte tussen de knoppen
 
-            _buttonPosition = new Vector2((screenW / 2) - (btnWidth / 2), (screenH / 2) + 100);
-            _buttonRect = new Rectangle((int)_buttonPosition.X, (int)_buttonPosition.Y, btnWidth, btnHeight);
+            // We zetten ze naast elkaar in het midden, iets onder het midden van het scherm
+            int totalWidth = (btnWidth * 2) + spacing;
+            int startX = (screenW - totalWidth) / 2;
+            int startY = (screenH / 2) + 150;
+
+            _playAgainRect = new Rectangle(startX, startY, btnWidth, btnHeight);
+            _homeRect = new Rectangle(startX + btnWidth + spacing, startY, btnWidth, btnHeight);
         }
 
         public override void Update(GameTime gameTime)
         {
             MouseState mouse = Mouse.GetState();
 
-            // Check of de muis OP de knop staat
-            if (_buttonRect.Contains(mouse.Position))
+            // --- LOGICA VOOR PLAY AGAIN KNOP ---
+            if (_playAgainRect.Contains(mouse.Position))
             {
-                // 1. Verander het plaatje naar de "ingedrukte" of "hover" versie
-                _restartButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButtonPressed");
-
-                // 2. Check voor klik
+                _currentPlayAgainTexture = _playAgainTexturePressed;
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
-                    // Start het spel opnieuw
+                    // Herstart het spel
                     _game.ChangeState(new PlayingState(_game, _content));
                 }
             }
             else
             {
-                // Muis is NIET op de knop: Zet het normale plaatje terug
-                _restartButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton");
+                _currentPlayAgainTexture = _playAgainTexture;
+            }
+
+            // --- LOGICA VOOR HOME KNOP ---
+            if (_homeRect.Contains(mouse.Position))
+            {
+                _currentHomeTexture = _homeTexturePressed;
+                if (mouse.LeftButton == ButtonState.Pressed)
+                {
+                    // Ga naar hoofdmenu
+                    _game.ChangeState(new MenuState(_game, _content));
+                }
+            }
+            else
+            {
+                _currentHomeTexture = _homeTexture;
             }
         }
 
@@ -67,8 +98,13 @@ namespace test.States
             int screenW = _game.GraphicsDevice.Viewport.Width;
             int screenH = _game.GraphicsDevice.Viewport.Height;
 
+            // Teken achtergrond
             sb.Draw(_backgroundTexture, new Rectangle(0, 0, screenW, screenH), Color.White);
-            sb.Draw(_restartButtonTexture, _buttonRect, Color.White);
+
+            // Teken knoppen
+            sb.Draw(_currentPlayAgainTexture, _playAgainRect, Color.White);
+            sb.Draw(_currentHomeTexture, _homeRect, Color.White);
+
             sb.End();
         }
     }
