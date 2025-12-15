@@ -22,7 +22,7 @@ namespace test.States
             _game.IsMouseVisible = true;
 
             // 1. Laad jouw Victory PNG
-            _backgroundTexture = _content.Load<Texture2D>("GameState/VictoryV1");
+            _backgroundTexture = _content.Load<Texture2D>("GameState/VictoryV2");
             _menuButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton");
 
             // 2. Positie
