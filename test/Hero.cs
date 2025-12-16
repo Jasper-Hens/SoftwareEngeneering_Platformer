@@ -2,11 +2,11 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using test.Animations;
 using test.Blocks;
 using test.block_Interfaces;
 using test.Effects;
-using test.Animations.Attack_animations;
+// Zorg dat deze namespaces kloppen met jouw mappen!
+using test.Animations;
 using test.Animations.HeroAnimations;
 
 namespace test
@@ -16,8 +16,6 @@ namespace test
         // Animaties
         private Animation _idle, _run, _jump;
         private Animation _attack1, _attack2, _attack3, _runAttack;
-
-        // NIEUW: Roll Animatie
         private Animation _rollAnim;
 
         private Animation _current;
@@ -36,7 +34,7 @@ namespace test
 
         private float gravity = 0.5f;
         private float moveSpeed = 4f;
-        private float jumpStrength = -10f;
+        private float jumpStrength = -12f; // Iets hoger springen
         private const int HITBOX_WIDTH = 45;
         private const int HITBOX_HEIGHT = 65;
 
@@ -61,14 +59,18 @@ namespace test
         private float _dashCost = 30f;
         private float _staminaRecharge = 0.5f;
         private double _dashCooldown = 0;
-        private float _dashSpeed = 9f; // Iets sneller dan lopen
+        private float _dashSpeed = 9f;
 
-        // NIEUW: Constructor accepteert nu 'rollTex'
+        // Inventory
+        public Inventory Inventory { get; private set; }
+
         public Hero(Texture2D idleTex, Texture2D runTex, Texture2D jumpTex,
                     Texture2D atk1Tex, Texture2D atk2Tex, Texture2D atk3Tex,
                     Texture2D runAtkTex, Texture2D slashTex,
-                    Texture2D rollTex) // <--- NIEUWE PARAMETER
+                    Texture2D rollTex)
         {
+            Inventory = new Inventory();
+
             _idle = new IdleAnimation(idleTex);
             _run = new RunAnimation(runTex);
             _jump = new JumpAnimation(jumpTex);
@@ -76,9 +78,7 @@ namespace test
             _attack2 = new AttackTwoAnimation(atk2Tex);
             _attack3 = new AttackThreeAnimation(atk3Tex);
             _runAttack = new RunAttackAnimation(runAtkTex);
-
-            // NIEUW: Maak de roll animatie aan
-            _rollAnim = new RollAnimation(rollTex);
+            _rollAnim = new RollAnimation(rollTex); // Zorg dat RollAnimation in test.Animations staat
 
             _attack1.IsLooping = false; _attack2.IsLooping = false; _attack3.IsLooping = false;
             _runAttack.IsLooping = false; _rollAnim.IsLooping = false;
@@ -109,7 +109,17 @@ namespace test
 
         public void Update(GameTime gameTime, List<Block> blocks)
         {
-            // 1. Stamina & Cooldown
+            if (IsDead) return;
+
+            // 1. INPUT CHECK (DIT WAS JE KWIJT!)
+            KeyboardState k = Keyboard.GetState();
+
+            // Zet flags op basis van input
+            IsRunningRight = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D);
+            IsRunningLeft = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A);
+            Jump = k.IsKeyDown(Keys.Space) || k.IsKeyDown(Keys.W) || k.IsKeyDown(Keys.Up);
+
+            // 2. Stamina
             if (!IsDashing && CurrentStamina < MaxStamina)
             {
                 CurrentStamina += _staminaRecharge;
@@ -117,7 +127,7 @@ namespace test
             }
             if (_dashCooldown > 0) _dashCooldown -= gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            // 2. Kleur Effecten
+            // 3. Invincibility Blink
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -126,21 +136,12 @@ namespace test
             }
             else _heroColor = Color.White;
 
-            // 3. DASH LOGICA (ROL)
+            // 4. DASH
             if (IsDashing)
             {
-                // Zet de animatie op rollen
                 _current = _rollAnim;
-
-                // Beweeg de speler
                 Velocity.X = FacingRight ? _dashSpeed : -_dashSpeed;
-
-                // OUD (FOUT): Velocity.Y = 0; <--- Deze regel zorgde voor het zweven!
-
-                // NIEUW (GOED): Gewoon zwaartekracht toepassen!
                 Velocity.Y += gravity;
-
-                // Blauwe gloed
                 _heroColor = Color.LightSkyBlue * 0.8f;
 
                 if (_current.IsFinished)
@@ -151,43 +152,36 @@ namespace test
                     _current.Reset();
                     _current = _idle;
                 }
-
-                MoveAndCollide(blocks); // De collision zorgt er wel voor dat je niet door de grond zakt
+                MoveAndCollide(blocks);
                 _current.Update(gameTime);
                 Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
                 return;
             }
 
-            if (IsDead) { /* Dood logica... */ return; }
-
-            // --- INPUT ---
-            KeyboardState k = Keyboard.GetState();
-            IsHitting = false;
-            AttackHitbox = Rectangle.Empty;
-
-            // CHECK: DASH INPUT
-            // Hier checken we: Shift ingedrukt? Niet al aan het dashen/aanvallen? Stamina genoeg?
-            // EN DE BELANGRIJKSTE: IsOnGround(blocks)?
+            // 5. DASH STARTEN
             if (k.IsKeyDown(Keys.LeftShift) && !IsDashing && !IsAttacking && _dashCooldown <= 0)
             {
-                if (CurrentStamina >= _dashCost && IsOnGround(blocks)) // <--- CHECK GROND HIER
+                if (CurrentStamina >= _dashCost && IsOnGround(blocks))
                 {
                     StartDash();
                 }
             }
 
-            // ... (Rest van Attack en Movement code blijft hetzelfde) ...
+            IsHitting = false;
+            AttackHitbox = Rectangle.Empty;
 
+            // 6. ATTACK INPUT
             if (!IsAttacking && _comboIndex > 0)
             {
                 _comboTimer += gameTime.ElapsedGameTime.TotalMilliseconds;
                 if (_comboTimer > COMBO_WINDOW) _comboIndex = 0;
             }
 
-            bool isAttackPressed = k.IsKeyDown(Keys.Z);
+            bool isAttackPressed = k.IsKeyDown(Keys.Z) || k.IsKeyDown(Keys.J); // Z of J voor attack
             if (isAttackPressed && !_wasAttackPressed && !IsAttacking) StartAttack();
             _wasAttackPressed = isAttackPressed;
 
+            // 7. BEWEGING TOEPASSEN
             bool movementLocked = IsAttacking && _current != _runAttack;
             Velocity.X = 0;
             if (!movementLocked)
@@ -201,10 +195,9 @@ namespace test
             Velocity.Y += gravity;
             MoveAndCollide(blocks);
 
-            // Animatie Keuze
+            // 8. ANIMATIE STATE MACHINE
             if (IsAttacking)
             {
-                // ... (Attack animatie logica) ...
                 if (_current.DamageFrames.Contains(_current.CurrentFrame))
                 {
                     IsHitting = true;
@@ -242,11 +235,23 @@ namespace test
         {
             IsDashing = true;
             CurrentStamina -= _dashCost;
-            _rollAnim.Reset(); // Reset de animatie naar frame 0
-            _current = _rollAnim; // Zet de animatie direct actief
+            _rollAnim.Reset();
+            _current = _rollAnim;
         }
 
-        // ... (Zorg dat je Hulpfuncties MoveAndCollide, IsOnGround, etc hieronder staan) ...
+        private void StartAttack()
+        {
+            IsAttacking = true;
+            if (Velocity.X != 0 || IsRunningRight || IsRunningLeft) _current = _runAttack;
+            else
+            {
+                if (_comboIndex == 0) _current = _attack1;
+                else if (_comboIndex == 1) _current = _attack2;
+                else _current = _attack3;
+            }
+            _current.Reset();
+        }
+
         private void MoveAndCollide(List<Block> blocks)
         {
             Position.X += Velocity.X;
@@ -267,20 +272,6 @@ namespace test
                 }
             }
             return false;
-        }
-
-        // ... en de rest van je collision functies en StartAttack ...
-        private void StartAttack()
-        {
-            IsAttacking = true;
-            if (Velocity.X != 0 || IsRunningRight || IsRunningLeft) _current = _runAttack;
-            else
-            {
-                if (_comboIndex == 0) _current = _attack1;
-                else if (_comboIndex == 1) _current = _attack2;
-                else _current = _attack3;
-            }
-            _current.Reset();
         }
 
         private void ResolveCollisionsX(List<Block> blocks)
@@ -331,9 +322,6 @@ namespace test
 
         public void Draw(SpriteBatch sb)
         {
-            // OPMERKING: Omdat we _current nu direct op _rollAnim zetten in de Update, 
-            // hoeven we hier geen ingewikkelde 'if' meer te doen.
-
             Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
             float widthDifference = currentFrame.Width - HITBOX_WIDTH;
             float drawX = Position.X - (widthDifference / 2);

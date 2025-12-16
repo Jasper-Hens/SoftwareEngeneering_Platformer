@@ -409,6 +409,18 @@
 /processorParam:TextureFormat=Color
 /build:Items/ItemSpritesheet.png
 
+#begin Items/KeyV2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Items/KeyV2.png
+
 #begin Jump.png
 /importer:TextureImporter
 /processor:TextureProcessor

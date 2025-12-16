@@ -12,9 +12,8 @@ namespace test
         public Vector2 Velocity;
         public bool FacingRight = false;
 
-        // Status
         public bool IsDead = false;
-        public bool ReadyToRemove { get; protected set; } = false; // NIEUW: Voor verdwijnen
+        public bool ReadyToRemove { get; protected set; } = false;
 
         public int MaxHealth { get; protected set; }
         public int CurrentHealth { get; protected set; }
@@ -36,10 +35,7 @@ namespace test
 
         public virtual void Update(GameTime gameTime, List<Block> blocks, Hero hero)
         {
-            // OUDE FOUT: if (IsDead) return; <--- VERWIJDER DEZE REGEL!
-            // We moeten blijven updaten om de Death animatie af te spelen.
-
-            // 1. Visuals
+            // 1. Visuals (Knipperen bij damage)
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -47,15 +43,15 @@ namespace test
             }
             else _color = Color.White;
 
-            // 2. Physics
+            // 2. Physics & AI
             Velocity.Y += _gravity;
+            UpdateAI(gameTime, hero, blocks);
 
-            UpdateAI(gameTime, hero, blocks); // Boss logica
-
-            // 3. Beweging
+            // 3. Beweging X
             Position.X += Velocity.X;
-            ResolveCollisionsX(blocks);
+            ResolveCollisionsX(blocks); // <--- HIER ZIT DE FIX VOOR HET VASTLOPEN
 
+            // 4. Beweging Y
             Position.Y += Velocity.Y;
             ResolveCollisionsY(blocks);
 
@@ -67,12 +63,11 @@ namespace test
             if (_invincibilityTimer <= 0 && !IsDead)
             {
                 CurrentHealth -= damage;
-                _invincibilityTimer = 500;
+                _invincibilityTimer = 200;
                 if (CurrentHealth <= 0)
                 {
                     CurrentHealth = 0;
                     IsDead = true;
-                    // Let op: De KnightBoss klasse zet de State straks op 'Death'
                 }
             }
         }
@@ -81,18 +76,27 @@ namespace test
         protected abstract void UpdateHitbox();
         public abstract void Draw(SpriteBatch sb);
 
-        // --- COLLISION ---
+        // --- DEZE FUNCTIE VOORKOMT DAT DE BOSS VASTPLAKT AAN DE VLOER ---
         protected void ResolveCollisionsX(List<Block> blocks)
         {
             UpdateHitbox();
+
+            // We maken de botsings-rechthoek iets kleiner dan de echte sprite.
+            // Hierdoor raken de "voeten" de grond niet als zijkant.
+            Rectangle skinnyRect = Hitbox;
+            skinnyRect.Y += 4;
+            skinnyRect.Height -= 8;
+
             foreach (var block in blocks)
             {
-                // Alleen botsen tegen SOLID blokken (Muren), niet tegen Platforms (waar je doorheen loopt)
-                if (block is ISolid && Hitbox.Intersects(block.BoundingBox))
+                // Check alleen MUREN (ISolid), negeer platforms voor X-botsingen
+                if (block is ISolid && skinnyRect.Intersects(block.BoundingBox))
                 {
                     Rectangle intersection = Rectangle.Intersect(Hitbox, block.BoundingBox);
+
                     if (Velocity.X > 0) Position.X -= intersection.Width;
                     else if (Velocity.X < 0) Position.X += intersection.Width;
+
                     Velocity.X = 0;
                     UpdateHitbox();
                 }
