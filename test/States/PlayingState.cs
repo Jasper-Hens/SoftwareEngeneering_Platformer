@@ -218,6 +218,12 @@ namespace test.States
                 }
             }
 
+            // --- Check of speler van de map gevallen is ---
+            if (_hero.Position.Y > _currentLevel.Height + 100)
+            {
+                _game.ChangeState(new GameOverState(_game, _content));
+            }
+
             if (_hero.IsDead) _game.ChangeState(new GameOverState(_game, _content));
 
             // --- VICTORY CHECK (HIER ZAT DE FOUT) ---
