@@ -70,7 +70,7 @@ namespace test.States
             Texture2D hudShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
             Texture2D hudShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
             Texture2D hudShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
-            _hud = new HeadsUpDisplay(hudShieldFull, hudShieldHalf, hudShieldEmpty, _pixel, keyIcon);
+            _hud = new HeadsUpDisplay(hudShieldFull, hudShieldHalf, hudShieldEmpty, _pixel);
 
             // 3. Victory Menu
             _victoryTexture = _content.Load<Texture2D>("GameState/VictoryV2");
@@ -132,20 +132,45 @@ namespace test.States
             {
                 if (_fadingOut)
                 {
+                    // Scherm wordt donkerder
                     _fadeOpacity += 0.02f;
+
                     if (_fadeOpacity >= 1.0f)
                     {
+                        // BELANGRIJK: Zorg dat deze regel er staat!
+                        // Anders blijft hij voor altijd in "fade out" modus (zwart scherm).
                         _fadingOut = false;
-                        if (_levelIndex == 1) { _levelIndex = 2; LoadLevel(new LevelTwo()); }
-                        else { _showVictoryScreen = true; }
+
+                        // Wissel van level
+                        if (_levelIndex == 1)
+                        {
+                            _levelIndex = 2;
+
+                            // Hier resetten we de speler (zoals je wilde)
+                            _hero.Reset();
+
+                            // Laad het nieuwe level
+                            LoadLevel(new LevelTwo());
+                        }
+                        else
+                        {
+                            // Als we level 2 uitgespeeld hebben (voor later)
+                            _showVictoryScreen = true;
+                        }
                     }
                 }
                 else
                 {
+                    // Scherm wordt weer licht (Fade In)
                     _fadeOpacity -= 0.02f;
-                    if (_fadeOpacity <= 0f) { _isTransitioning = false; _fadeOpacity = 0f; }
+
+                    if (_fadeOpacity <= 0f)
+                    {
+                        _isTransitioning = false;
+                        _fadeOpacity = 0f;
+                    }
                 }
-                return;
+                return; // Stop de update hier zolang we aan het faden zijn
             }
 
             _hero.Update(gameTime, _currentLevel.Blocks);
@@ -172,7 +197,14 @@ namespace test.States
             // Items
             foreach (var item in _currentLevel.Items)
             {
-                if (item.IsActive && _hero.Hitbox.HitboxRect.Intersects(item.Hitbox)) item.OnPickup(_hero);
+                // --- NIEUW: Update aanroepen voor het zweven ---
+                item.Update(gameTime);
+                // -----------------------------------------------
+
+                if (item.IsActive && _hero.Hitbox.HitboxRect.Intersects(item.Hitbox))
+                {
+                    item.OnPickup(_hero);
+                }
             }
 
             // Deur
@@ -239,7 +271,7 @@ namespace test.States
             sb.End();
 
             sb.Begin();
-            _hud.Draw(sb, _hero.CurrentHealth, _hero.MaxHealth, _hero.CurrentStamina, _hero.MaxStamina, _hero.Inventory.HasKey);
+            _hud.Draw(sb, _hero.CurrentHealth, _hero.MaxHealth, _hero.CurrentStamina, _hero.MaxStamina, _hero.Inventory);
 
             if (_showVictoryScreen)
             {

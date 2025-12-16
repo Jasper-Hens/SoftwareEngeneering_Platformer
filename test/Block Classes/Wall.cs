@@ -24,8 +24,7 @@ namespace test.Block_Classes
         // Plaatst de sprite onderaan de 64x64 grid cel.
         private static Rectangle CalculateWorldRect(int gridX, int gridY, int spriteWidth, int spriteHeight)
         {
-            int worldX = gridX * TILE_GRID_SIZE;
-            // Verschuif Y om de onderkant van de 50px sprite gelijk te laten lopen met de onderkant van de 64px cel.
+            int worldX = gridX * TILE_GRID_SIZE; 
             int worldY = (gridY * TILE_GRID_SIZE) + (TILE_GRID_SIZE - spriteHeight);
 
             return new Rectangle(worldX, worldY, spriteWidth, spriteHeight);

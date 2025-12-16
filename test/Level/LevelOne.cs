@@ -49,7 +49,7 @@ namespace test.Levels
             // Items.Add(new KeyItem(itemSheet, new Vector2(100, 100)));
 
             Texture2D Key = content.Load<Texture2D>("Items/KeyV2");
-            Items.Add(new KeyItem(Key, new Vector2(400, 575)));
+            Items.Add(new KeyItem(Key, new Vector2(400, 650)));
 
             // DEUR
             Texture2D objSheet = content.Load<Texture2D>("Objects/ObjectSpriteSheet");
@@ -78,6 +78,12 @@ namespace test.Levels
                 bHurt, bDeath
             );
             Enemies.Add(boss);
+
+            // HEART ITEM
+            Texture2D itemSheet = content.Load<Texture2D>("Items/ItemSpritesheet");
+
+            // Voeg het hartje toe op een plek naar keuze (bijv. X=200, Y=500)
+            Items.Add(new HeartItem(itemSheet, new Vector2(200, 600)));
         }
     }
 }

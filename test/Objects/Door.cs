@@ -14,11 +14,14 @@ namespace test.Objects
 
         public bool IsOpen { get; private set; } = false;
 
-        // AANGEPAST: Hitbox matcht nu met de grootte van je sprite (77x83)
+        // Hitbox matcht met de grootte van je sprite (77x83)
         public Rectangle Hitbox => new Rectangle((int)_position.X, (int)_position.Y, 77, 83);
 
-        // We slaan het rechthoekje van de dichte deur op om herhaling te voorkomen
+        // --- HIER ZIJN JE SPRITE FRAMES ---
         private Rectangle _closedFrameRect = new Rectangle(25, 409, 77, 83);
+        private Rectangle _OpeningSourceRect = new Rectangle(154, 409, 77, 83); // <--- Toegevoegd!
+        private Rectangle _openFrameRect = new Rectangle(283, 409, 77, 83);
+        // ----------------------------------
 
         public Door(Texture2D texture, Texture2D animSheet, Vector2 position)
         {
@@ -29,10 +32,13 @@ namespace test.Objects
             _openAnimation = new SimpleAnimation(animSheet);
             _openAnimation.IsLooping = false;
 
-            // De frames die je zelf had opgegeven:
-            _openAnimation.Frames.Add(new Rectangle(25, 409, 77, 83));  // Frame 1 (Dicht/Start)
-            _openAnimation.Frames.Add(new Rectangle(154, 409, 77, 83)); // Frame 2
-            _openAnimation.Frames.Add(new Rectangle(283, 409, 77, 83)); // Frame 3 (Open)
+            // Snelheid van de animatie (optioneel, standaard is 100ms)
+            // _openAnimation.Speed = 150; 
+
+            // We gebruiken nu de variabelen die we hierboven hebben gemaakt
+            _openAnimation.Frames.Add(_closedFrameRect);   // Frame 1: Dicht
+            _openAnimation.Frames.Add(_OpeningSourceRect); // Frame 2: Half open (HIER WORDT HIJ GEBRUIKT)
+            _openAnimation.Frames.Add(_openFrameRect);     // Frame 3: Open
         }
 
         public void Update(GameTime gameTime, Hero hero)
@@ -40,6 +46,8 @@ namespace test.Objects
             if (_isAnimating)
             {
                 _openAnimation.Update(gameTime);
+
+                // Als de animatie klaar is, blijft hij op het laatste frame staan (Open)
                 if (_openAnimation.IsFinished)
                 {
                     IsOpen = true;
@@ -53,7 +61,6 @@ namespace test.Objects
             // Interactie check
             if (Hitbox.Intersects(hero.Hitbox.HitboxRect))
             {
-                // Zorg dat inventory niet null is en key heeft
                 if (hero.Inventory != null && hero.Inventory.HasKey)
                 {
                     KeyboardState k = Keyboard.GetState();
@@ -74,13 +81,11 @@ namespace test.Objects
         {
             if (_isAnimating || IsOpen)
             {
-                // Teken de animatie
-                _openAnimation.Draw(sb, _position, true, Color.White);
+                Rectangle currentRect = _openAnimation.Frames[_openAnimation.CurrentFrame];
+                sb.Draw(_openAnimation.Texture, _position, currentRect, Color.White);
             }
             else
             {
-                // HIER ZAT HET PROBLEEM:
-                // We tekenen nu het specifieke stukje uit de sheet (25, 409) in plaats van (0,0)
                 sb.Draw(_texture, _position, _closedFrameRect, Color.White);
             }
         }

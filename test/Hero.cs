@@ -116,8 +116,8 @@ namespace test
 
             // Zet flags op basis van input
             IsRunningRight = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D);
-            IsRunningLeft = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.A);
-            Jump = k.IsKeyDown(Keys.Space) || k.IsKeyDown(Keys.W) || k.IsKeyDown(Keys.Up);
+            IsRunningLeft = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.Q);
+            Jump = k.IsKeyDown(Keys.Space);
 
             // 2. Stamina
             if (!IsDashing && CurrentStamina < MaxStamina)
@@ -320,6 +320,29 @@ namespace test
             }
         }
 
+        public void Reset()
+        {
+            CurrentHealth = MaxHealth; // Levens vol
+            CurrentStamina = MaxStamina; // Stamina vol
+            IsDead = false;
+
+            // Maak de inventory leeg
+            if (Inventory != null)
+            {
+                Inventory.Clear();
+            }
+        }
+        public void Heal(int amount)
+        {
+            CurrentHealth += amount;
+
+            // Zorg dat we niet meer levens krijgen dan het maximum
+            if (CurrentHealth > MaxHealth)
+            {
+                CurrentHealth = MaxHealth;
+            }
+        }
+
         public void Draw(SpriteBatch sb)
         {
             Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
@@ -330,5 +353,7 @@ namespace test
             _current.Draw(sb, drawPosition, FacingRight, _heroColor);
             _airSlashEffect.Draw(sb);
         }
+
+       
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic; // Nodig voor List
 
 namespace test.States
 {
@@ -7,24 +8,23 @@ namespace test.States
     {
         private Texture2D _shieldFull, _shieldHalf, _shieldEmpty;
         private Texture2D _pixel;
-        private Texture2D _keyTexture; // NIEUW
+        // _keyTexture is weggehaald, want die zit nu in de inventory items zelf!
 
         private Vector2 _startPosition = new Vector2(10, 10);
         private int _iconSize = 80;
         private int _padding = 10;
 
-        // Constructor aangepast: keyTex toegevoegd
-        public HeadsUpDisplay(Texture2D full, Texture2D half, Texture2D empty, Texture2D pixel, Texture2D keyTex)
+        // Constructor aangepast: geen keyTex meer nodig
+        public HeadsUpDisplay(Texture2D full, Texture2D half, Texture2D empty, Texture2D pixel)
         {
             _shieldFull = full;
             _shieldHalf = half;
             _shieldEmpty = empty;
             _pixel = pixel;
-            _keyTexture = keyTex;
         }
 
-        // Draw aangepast: hasKey toegevoegd
-        public void Draw(SpriteBatch sb, int currentHealth, int maxHealth, float currentStamina, float maxStamina, bool hasKey)
+        // Draw aangepast: we vragen nu om de hele Inventory in plaats van alleen 'hasKey'
+        public void Draw(SpriteBatch sb, int currentHealth, int maxHealth, float currentStamina, float maxStamina, Inventory inventory)
         {
             // 1. LEVENS
             int totalShields = maxHealth / 2;
@@ -52,11 +52,32 @@ namespace test.States
             Color staminaColor = percentage < 0.3f ? Color.Orange : Color.LimeGreen;
             sb.Draw(_pixel, new Rectangle(barX, barY, currentBarWidth, barHeight), staminaColor);
 
-            // 3. KEY (NIEUW)
-            if (hasKey && _keyTexture != null)
+            // 3. INVENTORY ITEMS (NIEUW & GENERIEK)
+            if (inventory != null && inventory.Items.Count > 0)
             {
-                // Teken onder de stamina balk
-                sb.Draw(_keyTexture, new Vector2(barX, barY + 30), Color.White);
+                int startItemX = barX;
+                int startItemY = barY + barHeight + 15; // Iets onder de stamina balk
+                int itemSpacing = 10; // Ruimte tussen items
+
+                // Loop door alle items in je inventory
+                for (int i = 0; i < inventory.Items.Count; i++)
+                {
+                    InventoryItem item = inventory.Items[i];
+
+                    // Bepaal grootte (bijv. 50% van origineel)
+                    float scale = 0.5f;
+                    int width = (int)(item.SourceRect.Width * scale);
+                    int height = (int)(item.SourceRect.Height * scale);
+
+                    // Bepaal positie (elk volgend item schuift op naar rechts)
+                    int x = startItemX + (i * (width + itemSpacing));
+                    int y = startItemY;
+
+                    Rectangle destRect = new Rectangle(x, y, width, height);
+
+                    // Teken het item
+                    sb.Draw(item.Texture, destRect, item.SourceRect, Color.White);
+                }
             }
         }
     }
