@@ -46,7 +46,7 @@ namespace test.States
         public override void LoadContent()
         {
             _pixel = new Texture2D(_game.GraphicsDevice, 1, 1);
-            _pixel.SetData(new[] { Color.Black });
+            _pixel.SetData(new[] { Color.White });
 
             // 1. Textures
             _idleTexture = _content.Load<Texture2D>("Idle");
@@ -79,6 +79,12 @@ namespace test.States
             _homeBtnTex = _content.Load<Texture2D>("HomeScreen/HomeButton - kopie");
             _homeBtnPressedTex = _content.Load<Texture2D>("HomeScreen/HomeButtonPressed - kopie");
 
+            //evil wizard
+            Texture2D wizIdle = _content.Load<Texture2D>("Wizard/wizard idle");
+            Texture2D wizAtk = _content.Load<Texture2D>("Wizard/wizard attack");
+            Texture2D wizDeath = _content.Load<Texture2D>("Wizard/wizard death");
+            _currentLevel.Enemies.Add(new EvilWizard(wizIdle, wizAtk, wizDeath, new Vector2(600, 400)));
+
             _currentPlayAgainTex = _playAgainBtnTex;
             _currentHomeTex = _homeBtnTex;
 
@@ -92,6 +98,8 @@ namespace test.States
 
             // 4. Achtergrond Sheet
             _paleBackGroundSpriteSheet = _content.Load<Texture2D>("Background/paleBackgroundSpriteSheet");
+
+            
 
             // 5. Start Level
             LoadLevel(new LevelOne());
