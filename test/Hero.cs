@@ -50,7 +50,12 @@ namespace test
         public bool IsDead { get; private set; } = false;
         public float MaxStamina { get; private set; } = 100f;
         public float CurrentStamina { get; private set; }
+
+        // --- AANPASSING HIER ---
         public bool IsDashing { get; private set; } = false;
+        // We voegen deze regel toe zodat 'IsRolling' hetzelfde betekent als 'IsDashing'
+        public bool IsRolling => IsDashing;
+        // -----------------------
 
         private double _invincibilityTimer = 0;
         private Color _heroColor = Color.White;
@@ -111,7 +116,7 @@ namespace test
         {
             if (IsDead) return;
 
-            // 1. INPUT CHECK (DIT WAS JE KWIJT!)
+            // 1. INPUT CHECK
             KeyboardState k = Keyboard.GetState();
 
             // Zet flags op basis van input
@@ -346,14 +351,23 @@ namespace test
         public void Draw(SpriteBatch sb)
         {
             Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
+
+            // 1. Horizontaal centreren (zoals je al had)
             float widthDifference = currentFrame.Width - HITBOX_WIDTH;
             float drawX = Position.X - (widthDifference / 2);
-            Vector2 drawPosition = new Vector2(drawX, Position.Y);
 
+            // 2. NIEUW: Verticaal uitlijnen op de grond (Onderkant hitbox)
+            // Dit zorgt ervoor dat als je rolt (klein plaatje), je netjes op de grond blijft
+            // en niet zweeft of zakt.
+            float heightDifference = HITBOX_HEIGHT - currentFrame.Height;
+            float drawY = Position.Y + heightDifference;
+
+            Vector2 drawPosition = new Vector2(drawX, drawY);
+
+            // Teken de held
             _current.Draw(sb, drawPosition, FacingRight, _heroColor);
+
             _airSlashEffect.Draw(sb);
         }
-
-       
     }
 }

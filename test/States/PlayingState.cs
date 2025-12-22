@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using test.Levels;
 using test.Objects;
+// Voeg deze toe zodat we bij de statische variabele van EvilWizard kunnen
+using test;
 
 namespace test.States
 {
@@ -14,28 +16,25 @@ namespace test.States
         private Camera _camera;
         private HeadsUpDisplay _hud;
 
-        // Level Management
         private BaseLevel _currentLevel;
         private int _levelIndex = 1;
 
-        // Transition
         private bool _isTransitioning = false;
         private float _fadeOpacity = 0f;
-        private Texture2D _pixel;
+        // _pixel is nu 'internal' zodat andere klassen in dezelfde assembly hem kunnen zien indien nodig,
+        // maar we gaan hem specifiek doorgeven.
+        internal Texture2D _pixel;
         private bool _fadingOut = false;
 
-        // Victory
         private bool _showVictoryScreen = false;
         private Texture2D _victoryTexture, _playAgainBtnTex, _playAgainBtnPressedTex, _homeBtnTex, _homeBtnPressedTex;
         private Texture2D _currentPlayAgainTex, _currentHomeTex;
         private Rectangle _victoryPlayRect, _victoryHomeRect;
 
-        // Achtergrond
         private Texture2D _paleBackGroundSpriteSheet;
         private BackgroundLayer _skyLayer, _natureLayer, _wallLayer, _floorLayer, _pillarsLayer;
         private int _levelPixelWidth;
 
-        // Textures
         private Texture2D _idleTexture, _runTexture, _jumpTexture, _rollTexture;
         private Texture2D _attack1Texture, _attack2Texture, _attack3Texture, _runAttackTexture, _slashTexture;
 
@@ -48,7 +47,11 @@ namespace test.States
             _pixel = new Texture2D(_game.GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
-            // 1. Textures
+            // --- NIEUW: GEEF DE DEBUG PIXEL AAN DE EVILWIZARD KLASSE ---
+            // Dit stelt de wizard in staat om zijn hitboxes te tekenen.
+            EvilWizard.DebugPixel = _pixel;
+            // -----------------------------------------------------------
+
             _idleTexture = _content.Load<Texture2D>("Idle");
             _runTexture = _content.Load<Texture2D>("Run");
             _jumpTexture = _content.Load<Texture2D>("Jump");
@@ -65,25 +68,17 @@ namespace test.States
                 _runAttackTexture, _slashTexture, _rollTexture
             );
 
-            // 2. HUD
             Texture2D keyIcon = _content.Load<Texture2D>("Items/ItemSpritesheet");
             Texture2D hudShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
             Texture2D hudShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
             Texture2D hudShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
             _hud = new HeadsUpDisplay(hudShieldFull, hudShieldHalf, hudShieldEmpty, _pixel);
 
-            // 3. Victory Menu
             _victoryTexture = _content.Load<Texture2D>("GameState/VictoryV2");
             _playAgainBtnTex = _content.Load<Texture2D>("HomeScreen/PlayAgainButton - kopie");
             _playAgainBtnPressedTex = _content.Load<Texture2D>("HomeScreen/PlayAgainButtonPressed - kopie");
             _homeBtnTex = _content.Load<Texture2D>("HomeScreen/HomeButton - kopie");
             _homeBtnPressedTex = _content.Load<Texture2D>("HomeScreen/HomeButtonPressed - kopie");
-
-            //evil wizard
-            Texture2D wizIdle = _content.Load<Texture2D>("Wizard/wizard idle");
-            Texture2D wizAtk = _content.Load<Texture2D>("Wizard/wizard attack");
-            Texture2D wizDeath = _content.Load<Texture2D>("Wizard/wizard death");
-            _currentLevel.Enemies.Add(new EvilWizard(wizIdle, wizAtk, wizDeath, new Vector2(600, 400)));
 
             _currentPlayAgainTex = _playAgainBtnTex;
             _currentHomeTex = _homeBtnTex;
@@ -96,12 +91,8 @@ namespace test.States
             _victoryPlayRect = new Rectangle(startX, startY, btnW, btnH);
             _victoryHomeRect = new Rectangle(startX + btnW + spacing, startY, btnW, btnH);
 
-            // 4. Achtergrond Sheet
             _paleBackGroundSpriteSheet = _content.Load<Texture2D>("Background/paleBackgroundSpriteSheet");
 
-            
-
-            // 5. Start Level
             LoadLevel(new LevelOne());
         }
 
@@ -119,7 +110,6 @@ namespace test.States
             int vpW = _game.GraphicsDevice.Viewport.Width;
             int vpH = _game.GraphicsDevice.Viewport.Height;
 
-            // Oude parallax settings terug
             _skyLayer = new BackgroundLayer(_paleBackGroundSpriteSheet, new Rectangle(0, 542, 960, 541), 0.1f, vpW, vpH, _levelPixelWidth);
             _natureLayer = new BackgroundLayer(_paleBackGroundSpriteSheet, new Rectangle(961, 154, 960, 387), 0.1f, vpW, vpH, _levelPixelWidth);
             _wallLayer = new BackgroundLayer(_paleBackGroundSpriteSheet, new Rectangle(961, 542, 960, 541), 1.0f, vpW, vpH, _levelPixelWidth);
@@ -140,51 +130,37 @@ namespace test.States
             {
                 if (_fadingOut)
                 {
-                    // Scherm wordt donkerder
                     _fadeOpacity += 0.02f;
-
                     if (_fadeOpacity >= 1.0f)
                     {
-                        // BELANGRIJK: Zorg dat deze regel er staat!
-                        // Anders blijft hij voor altijd in "fade out" modus (zwart scherm).
                         _fadingOut = false;
-
-                        // Wissel van level
                         if (_levelIndex == 1)
                         {
                             _levelIndex = 2;
-
-                            // Hier resetten we de speler (zoals je wilde)
                             _hero.Reset();
-
-                            // Laad het nieuwe level
                             LoadLevel(new LevelTwo());
                         }
                         else
                         {
-                            // Als we level 2 uitgespeeld hebben (voor later)
                             _showVictoryScreen = true;
                         }
                     }
                 }
                 else
                 {
-                    // Scherm wordt weer licht (Fade In)
                     _fadeOpacity -= 0.02f;
-
                     if (_fadeOpacity <= 0f)
                     {
                         _isTransitioning = false;
                         _fadeOpacity = 0f;
                     }
                 }
-                return; // Stop de update hier zolang we aan het faden zijn
+                return;
             }
 
             _hero.Update(gameTime, _currentLevel.Blocks);
             _camera.Follow(_hero.Position);
 
-            // Enemies Update Loop
             for (int i = _currentLevel.Enemies.Count - 1; i >= 0; i--)
             {
                 var enemy = _currentLevel.Enemies[i];
@@ -192,30 +168,35 @@ namespace test.States
 
                 if (_hero.IsHitting && !enemy.IsDead)
                 {
-                    // HIER PAS JE DE DAMAGE AAN (bijv. 20 damage per klap)
                     if (_hero.AttackHitbox.Intersects(enemy.Hitbox)) enemy.TakeDamage(20);
                 }
+
                 if (enemy.IsHitting && !enemy.IsDead)
                 {
-                    if (enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect)) _hero.TakeDamage(1);
+                    // Check: Rolt de held NIET? En raken ze elkaar?
+                    if (!_hero.IsRolling && enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
+                    {
+                        _hero.TakeDamage(1);
+
+                        // --- NIEUW: VERTEL DE ENEMY DAT HIJ RAAK HEEFT GESLAGEN ---
+                        if (enemy is EvilWizard wizard)
+                        {
+                            wizard.OnHitSuccesful(); // Dit zet de cooldown aan
+                        }
+                        // -----------------------------------------------------------
+                    }
                 }
-                if (enemy.ReadyToRemove) _currentLevel.Enemies.RemoveAt(i);
             }
 
-            // Items
             foreach (var item in _currentLevel.Items)
             {
-                // --- NIEUW: Update aanroepen voor het zweven ---
                 item.Update(gameTime);
-                // -----------------------------------------------
-
                 if (item.IsActive && _hero.Hitbox.HitboxRect.Intersects(item.Hitbox))
                 {
                     item.OnPickup(_hero);
                 }
             }
 
-            // Deur
             if (_currentLevel.ExitDoor != null)
             {
                 _currentLevel.ExitDoor.Update(gameTime, _hero);
@@ -226,7 +207,6 @@ namespace test.States
                 }
             }
 
-            // --- Check of speler van de map gevallen is ---
             if (_hero.Position.Y > _currentLevel.Height + 100)
             {
                 _game.ChangeState(new GameOverState(_game, _content));
@@ -234,10 +214,8 @@ namespace test.States
 
             if (_hero.IsDead) _game.ChangeState(new GameOverState(_game, _content));
 
-            // --- VICTORY CHECK (HIER ZAT DE FOUT) ---
             if (_levelIndex == 1 && _currentLevel.Enemies.Count == 0 && !_showVictoryScreen)
             {
-                // Zodra de enemy dood is, toon victory scherm
                 _showVictoryScreen = true;
             }
         }

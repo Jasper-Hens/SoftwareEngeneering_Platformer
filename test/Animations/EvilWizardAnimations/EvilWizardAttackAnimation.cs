@@ -21,7 +21,7 @@ namespace test.Animations.EvilWizardAnimations
                 new Rectangle(1109, 51, 70, 50)
             };
 
-            FrameSpeed = 100f;
+            FrameSpeed = 100;
             IsLooping = false;
 
             // Damage tijdens de zwaai (frames 4, 5, 6)

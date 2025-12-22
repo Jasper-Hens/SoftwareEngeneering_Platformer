@@ -5,6 +5,7 @@ using test.Items;
 using test.Objects;
 using test.Blocks;
 using test.Level;
+using test; // Nodig om EvilWizard te kunnen gebruiken
 
 namespace test.Levels
 {
@@ -79,6 +80,15 @@ namespace test.Levels
                 bHurt, bDeath
             );
             Enemies.Add(boss);
+
+            // --- NIEUW: EVIL WIZARD ---
+            Texture2D wizIdle = content.Load<Texture2D>("EvilWizard/Idle");
+            Texture2D wizAtk = content.Load<Texture2D>("EvilWizard/Attack");
+            Texture2D wizDeath = content.Load<Texture2D>("EVilWizard/Death");
+
+            // Voeg de wizard toe aan de enemies lijst
+            Enemies.Add(new EvilWizard(wizIdle, wizAtk, wizDeath, new Vector2(600, 400)));
+            // --------------------------
 
             // HEART ITEM
             Texture2D itemSheet = content.Load<Texture2D>("Items/ItemSpritesheet");

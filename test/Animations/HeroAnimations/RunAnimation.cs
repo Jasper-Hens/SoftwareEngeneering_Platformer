@@ -14,6 +14,8 @@ namespace test.Animations.HeroAnimations
             Frames.Add(new Rectangle(297, 23, 48, 60));
             Frames.Add(new Rectangle(86, 23, 54, 59));
             Frames.Add(new Rectangle(364, 23, 54, 59));
+
+            FrameSpeed = 100;
         }
     }
 }

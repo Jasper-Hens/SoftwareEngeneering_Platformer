@@ -18,7 +18,7 @@ namespace test.Animations.EvilWizardAnimations
                 new Rectangle(657, 75, 47, 27)
             };
 
-            FrameSpeed = 150f;
+            FrameSpeed = 150;
             IsLooping = false;
         }
     }
