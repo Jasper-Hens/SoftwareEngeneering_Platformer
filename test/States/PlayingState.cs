@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using test.Levels;
 using test.Objects;
 // Voeg deze toe zodat we bij de statische variabele van EvilWizard kunnen
-using test;
 
 namespace test.States
 {

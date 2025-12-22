@@ -39,7 +39,7 @@ namespace test
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
-                _color = (_invincibilityTimer % 200 < 100) ? Color.Red : Color.White;
+                _color = _invincibilityTimer % 200 < 100 ? Color.Red : Color.White;
             }
             else _color = Color.White;
 

@@ -146,7 +146,7 @@ namespace test
                 // We lijnen de "rechterkant" van de sprite uit met de rechterkant van de hitbox.
 
                 // Formule: (Positie + HitboxBreedte) - PlaatjeBreedte + Correctie
-                drawPos.X = (Position.X + BODY_WIDTH) - scaledWidth + 5;
+                drawPos.X = Position.X + BODY_WIDTH - scaledWidth + 5;
             }
 
             // Teken met schaal 2.0f

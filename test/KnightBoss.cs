@@ -162,7 +162,7 @@ namespace test
                             {
                                 SwitchState(KnightBossState.Walk);
                                 if (obstacleInFront) _patrolDirection *= -1;
-                                else _patrolDirection = (_rnd.Next(0, 2) == 0) ? 1 : -1;
+                                else _patrolDirection = _rnd.Next(0, 2) == 0 ? 1 : -1;
                                 FacingRight = _patrolDirection > 0;
                                 _patrolTimer = 3000;
                             }
@@ -188,8 +188,8 @@ namespace test
                         Velocity.X = FacingRight ? _runSpeed : -_runSpeed;
 
                         // Spring logica
-                        bool heroIsHigher = (hero.Position.Y < Position.Y - 100);
-                        bool randomJump = (_rnd.Next(0, 300) == 0);
+                        bool heroIsHigher = hero.Position.Y < Position.Y - 100;
+                        bool randomJump = _rnd.Next(0, 300) == 0;
 
                         if (_jumpTimer <= 0 && (obstacleInFront || heroIsHigher || randomJump))
                         {
@@ -235,7 +235,7 @@ namespace test
             SwitchState(KnightBossState.Jump);
             Velocity.Y = -12f;
             // Behoud horizontale snelheid
-            float airSpeed = (_currentState == KnightBossState.Run) ? _runSpeed : _moveSpeed;
+            float airSpeed = _currentState == KnightBossState.Run ? _runSpeed : _moveSpeed;
             Velocity.X = FacingRight ? airSpeed : -airSpeed;
             _jumpTimer = 1500;
         }

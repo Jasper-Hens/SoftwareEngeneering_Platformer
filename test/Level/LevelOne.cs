@@ -5,7 +5,6 @@ using test.Items;
 using test.Objects;
 using test.Blocks;
 using test.Level;
-using test; // Nodig om EvilWizard te kunnen gebruiken
 
 namespace test.Levels
 {
@@ -95,6 +94,13 @@ namespace test.Levels
 
             // Voeg het hartje toe op een plek naar keuze (bijv. X=200, Y=500)
             Items.Add(new HeartItem(itemSheet, new Vector2(200, 600)));
+
+            Texture2D dWalk = content.Load<Texture2D>("Demon2/Walk");
+            Texture2D dAttack = content.Load<Texture2D>("Demon2/Attack");
+            Texture2D dDeath = content.Load<Texture2D>("Demon2/Dead");
+
+            // Geef ze alle drie mee aan de constructor
+            Enemies.Add(new Demon2(dWalk, dAttack, dDeath, new Vector2(800, 500)));
         }
     }
 }
