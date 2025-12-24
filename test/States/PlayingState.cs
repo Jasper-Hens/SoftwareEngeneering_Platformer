@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using test.Levels;
 using test.Objects;
+using test;
 
 namespace test.States
 {
@@ -61,7 +62,6 @@ namespace test.States
                 _runAttackTexture, _slashTexture, _rollTexture
             );
 
-            Texture2D keyIcon = _content.Load<Texture2D>("Items/ItemSpritesheet");
             Texture2D hudShieldFull = _content.Load<Texture2D>("PlayerHUD/PlayerHealthFullV3");
             Texture2D hudShieldHalf = _content.Load<Texture2D>("PlayerHUD/PlayerHealthHalfV3");
             Texture2D hudShieldEmpty = _content.Load<Texture2D>("PlayerHUD/PlayerHealthBrokenShieldV3");
@@ -121,71 +121,63 @@ namespace test.States
 
             if (_isTransitioning)
             {
-                if (_fadingOut)
-                {
-                    _fadeOpacity += 0.02f;
-                    if (_fadeOpacity >= 1.0f)
-                    {
-                        _fadingOut = false;
-                        if (_levelIndex == 1)
-                        {
-                            _levelIndex = 2;
-                            _hero.Reset();
-                            LoadLevel(new LevelTwo());
-                        }
-                        else
-                        {
-                            _showVictoryScreen = true;
-                        }
-                    }
-                }
-                else
-                {
-                    _fadeOpacity -= 0.02f;
-                    if (_fadeOpacity <= 0f)
-                    {
-                        _isTransitioning = false;
-                        _fadeOpacity = 0f;
-                    }
-                }
+                HandleTransition();
                 return;
             }
 
             _hero.Update(gameTime, _currentLevel.Blocks);
             _camera.Follow(_hero.Position);
 
+            // --- ENEMIES LOOP ---
             for (int i = _currentLevel.Enemies.Count - 1; i >= 0; i--)
             {
                 var enemy = _currentLevel.Enemies[i];
                 enemy.Update(gameTime, _currentLevel.Blocks, _hero);
 
+                // 1. Speler valt aan met zwaard
                 if (_hero.IsHitting && !enemy.IsDead)
                 {
                     if (_hero.AttackHitbox.Intersects(enemy.Hitbox)) enemy.TakeDamage(20);
                 }
 
+                // 2. STOMP MECHANIC (SOLID VERSIE)
+                if (_hero.Velocity.Y > 0 && !enemy.IsDead)
+                {
+                    if (_hero.Hitbox.HitboxRect.Intersects(enemy.Hitbox))
+                    {
+                        // Check: Zit held boven de vijand?
+                        if (_hero.Hitbox.HitboxRect.Bottom < enemy.Hitbox.Bottom)
+                        {
+                            // --- MAG IK HIER OP SPRINGEN? ---
+                            if (enemy.IsStompable)
+                            {
+                                enemy.TakeDamage(enemy.MaxHealth);
+                                _hero.Velocity.Y = -12f; // Stuiter omhoog
+                            }
+                            // ---------------------------------------------
+                        }
+                    }
+                }
+
+                // 3. Enemy valt aan
                 if (enemy.IsHitting && !enemy.IsDead)
                 {
                     if (!_hero.IsRolling && enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
                     {
                         _hero.TakeDamage(1);
-                        if (enemy is EvilWizard wizard)
-                        {
-                            wizard.OnHitSuccesful();
-                        }
+                        if (enemy is EvilWizard wizard) wizard.OnHitSuccesful();
                     }
                 }
             }
 
+            // --- ITEMS ---
             foreach (var item in _currentLevel.Items)
             {
                 item.Update(gameTime);
-                if (item.IsActive && _hero.Hitbox.HitboxRect.Intersects(item.Hitbox))
-                {
-                    item.OnPickup(_hero);
-                }
+                if (item.IsActive && _hero.Hitbox.HitboxRect.Intersects(item.Hitbox)) item.OnPickup(_hero);
             }
 
+            // --- DEUREN ---
             if (_currentLevel.ExitDoor != null)
             {
                 _currentLevel.ExitDoor.Update(gameTime, _hero);
@@ -195,50 +187,64 @@ namespace test.States
                     _fadingOut = true;
                 }
             }
-            // (EntryDoor hoeft geen update logica te hebben omdat hij alleen maar open staat en niks doet)
 
-            if (_hero.Position.Y > _currentLevel.Height + 100)
+            // --- SPIKES ---
+            foreach (var spike in _currentLevel.SpikesObjects)
             {
-                _game.ChangeState(new GameOverState(_game, _content));
+                if (_hero.Hitbox.HitboxRect.Intersects(spike.Hitbox))
+                {
+                    _hero.TakeDamage(1);
+                    _hero.Velocity.Y = -10f;
+                }
             }
 
+            // --- SPINNING BLADES ---
+            foreach (var blade in _currentLevel.Blades)
+            {
+                blade.Update(gameTime);
+                if (_hero.Hitbox.HitboxRect.Intersects(blade.Hitbox))
+                {
+                    _hero.TakeDamage(1);
+                    if (_hero.Position.X < blade.Hitbox.X) _hero.Velocity.X = -10;
+                    else _hero.Velocity.X = 10;
+                    _hero.Velocity.Y = -5;
+                }
+            }
+
+            // --- GAME OVER & VICTORY ---
+            if (_hero.Position.Y > _currentLevel.Height + 100) _game.ChangeState(new GameOverState(_game, _content));
             if (_hero.IsDead) _game.ChangeState(new GameOverState(_game, _content));
 
             if (_levelIndex == 1 && _currentLevel.Enemies.Count == 0 && !_showVictoryScreen)
             {
                 _showVictoryScreen = true;
             }
+        }
 
-            foreach (var spike in _currentLevel.SpikesObjects)
+        private void HandleTransition()
+        {
+            if (_fadingOut)
             {
-                // Check of de speler de spikes raakt
-                if (_hero.Hitbox.HitboxRect.Intersects(spike.Hitbox))
+                _fadeOpacity += 0.02f;
+                if (_fadeOpacity >= 1.0f)
                 {
-                    // 1. Speler krijgt damage (Hero regelt zelf de invincibility timer)
-                    _hero.TakeDamage(1);
-
-                    // 2. Speler vliegt de lucht in (Knockback effect)
-                    // We zetten de verticale snelheid hard op -10 (omhoog)
-                    _hero.Velocity.Y = -10f;
+                    _fadingOut = false;
+                    if (_levelIndex == 1)
+                    {
+                        _levelIndex = 2;
+                        _hero.Reset();
+                        LoadLevel(new LevelTwo());
+                    }
+                    else _showVictoryScreen = true;
                 }
             }
-
-            // --- CHECK VOOR SPINNING BLADES ---
-            foreach (var blade in _currentLevel.Blades)
+            else
             {
-                // 1. Zorg dat de animatie afspeelt
-                blade.Update(gameTime);
-
-                // 2. Check botsing met speler
-                if (_hero.Hitbox.HitboxRect.Intersects(blade.Hitbox))
+                _fadeOpacity -= 0.02f;
+                if (_fadeOpacity <= 0f)
                 {
-                    _hero.TakeDamage(1);
-
-                    // Optioneel: Knockback (bijv. opzij of omhoog)
-                    // Als je wilt dat hij wegvliegt als hij de blade raakt:
-                    if (_hero.Position.X < blade.Hitbox.X) _hero.Velocity.X = -10; // Naar links beuken
-                    else _hero.Velocity.X = 10; // Naar rechts beuken
-                    _hero.Velocity.Y = -5; // Beetje omhoog
+                    _isTransitioning = false;
+                    _fadeOpacity = 0f;
                 }
             }
         }
@@ -278,23 +284,13 @@ namespace test.States
             _floorLayer.Draw(sb, _camera.Position);
             _pillarsLayer.Draw(sb, _camera.Position);
 
-            foreach (var spike in _currentLevel.SpikesObjects)
-            {
-                spike.Draw(sb);
-            }
-
-
-            // --- VOEG DEZE REGEL TOE ---
-            foreach (var blade in _currentLevel.Blades) blade.Draw(sb);
-            // ---------------------------
-
             foreach (var block in _currentLevel.Blocks) block.Draw(sb);
-
-            // --- HIER TEKENEN WE DE ENTRY DOOR (ALS DIE ER IS) ---
             if (_currentLevel.EntryDoor != null) _currentLevel.EntryDoor.Draw(sb);
-            // -----------------------------------------------------
-
             if (_currentLevel.ExitDoor != null) _currentLevel.ExitDoor.Draw(sb);
+
+            foreach (var spike in _currentLevel.SpikesObjects) spike.Draw(sb);
+            foreach (var blade in _currentLevel.Blades) blade.Draw(sb);
+
             foreach (var item in _currentLevel.Items) item.Draw(sb);
             foreach (var enemy in _currentLevel.Enemies) enemy.Draw(sb);
             _hero.Draw(sb);

@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using test.Blocks;
-using test.block_Interfaces;
+using test.block_Interfaces; // Zorg dat deze klopt met jouw namespace
 
 namespace test
 {
@@ -14,6 +14,10 @@ namespace test
 
         public bool IsDead = false;
         public bool ReadyToRemove { get; protected set; } = false;
+
+        // --- SOLID: EIGENSCHAP OM TE BEPALEN OF JE EROP KUNT SPRINGEN ---
+        public virtual bool IsStompable { get; protected set; } = false;
+        // ---------------------------------------------------------------
 
         public int MaxHealth { get; protected set; }
         public int CurrentHealth { get; protected set; }
@@ -35,7 +39,7 @@ namespace test
 
         public virtual void Update(GameTime gameTime, List<Block> blocks, Hero hero)
         {
-            // 1. Visuals (Knipperen bij damage)
+            // 1. Visuals
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -47,11 +51,10 @@ namespace test
             Velocity.Y += _gravity;
             UpdateAI(gameTime, hero, blocks);
 
-            // 3. Beweging X
+            // 3. Beweging
             Position.X += Velocity.X;
-            ResolveCollisionsX(blocks); // <--- HIER ZIT DE FIX VOOR HET VASTLOPEN
+            ResolveCollisionsX(blocks);
 
-            // 4. Beweging Y
             Position.Y += Velocity.Y;
             ResolveCollisionsY(blocks);
 
@@ -76,27 +79,20 @@ namespace test
         protected abstract void UpdateHitbox();
         public abstract void Draw(SpriteBatch sb);
 
-        // --- DEZE FUNCTIE VOORKOMT DAT DE BOSS VASTPLAKT AAN DE VLOER ---
         protected void ResolveCollisionsX(List<Block> blocks)
         {
             UpdateHitbox();
-
-            // We maken de botsings-rechthoek iets kleiner dan de echte sprite.
-            // Hierdoor raken de "voeten" de grond niet als zijkant.
             Rectangle skinnyRect = Hitbox;
             skinnyRect.Y += 4;
             skinnyRect.Height -= 8;
 
             foreach (var block in blocks)
             {
-                // Check alleen MUREN (ISolid), negeer platforms voor X-botsingen
                 if (block is ISolid && skinnyRect.Intersects(block.BoundingBox))
                 {
                     Rectangle intersection = Rectangle.Intersect(Hitbox, block.BoundingBox);
-
                     if (Velocity.X > 0) Position.X -= intersection.Width;
                     else if (Velocity.X < 0) Position.X += intersection.Width;
-
                     Velocity.X = 0;
                     UpdateHitbox();
                 }

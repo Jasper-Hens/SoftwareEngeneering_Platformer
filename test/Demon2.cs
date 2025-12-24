@@ -18,20 +18,22 @@ namespace test
         private bool _isAttacking = false;
         private double _damageCooldown = 0;
 
-        // Constanten
         private const int WIDTH = 44;
         private const int HEIGHT = 80;
         private const int ATTACK_RANGE = 40;
 
-        // AANGEPAST: We vragen nu om 3 losse textures in plaats van 1 spritesheet
         public Demon2(Texture2D walkTex, Texture2D attackTex, Texture2D deathTex, Vector2 startPosition)
-            : base(startPosition, 1) // 1 HP
+            : base(startPosition, 1)
         {
-            _walkAnim = new Demon2WalkAnimation(walkTex);     // Gebruik de loop-texture
-            _attackAnim = new Demon2AttackAnimation(attackTex); // Gebruik de attack-texture
-            _deathAnim = new Demon2DeathAnimation(deathTex);    // Gebruik de death-texture
+            _walkAnim = new Demon2WalkAnimation(walkTex);
+            _attackAnim = new Demon2AttackAnimation(attackTex);
+            _deathAnim = new Demon2DeathAnimation(deathTex);
 
             _currentAnim = _walkAnim;
+
+            // --- SOLID: OOK DEZE VIJAND KUN JE DODEN DOOR TE SPRINGEN ---
+            IsStompable = true;
+            // ------------------------------------------------------------
 
             FacingRight = true;
             UpdateHitbox();
@@ -47,7 +49,7 @@ namespace test
                     _currentAnim.Reset();
                     Velocity.X = 0;
                     IsHitting = false;
-                    AttackHitbox = Microsoft.Xna.Framework.Rectangle.Empty;
+                    AttackHitbox = Rectangle.Empty;
                 }
                 _currentAnim.Update(gameTime);
                 return;
@@ -55,14 +57,8 @@ namespace test
 
             if (_damageCooldown > 0) _damageCooldown -= gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            var headHitbox = new Microsoft.Xna.Framework.Rectangle(Hitbox.X + 5, Hitbox.Y - 5, Hitbox.Width - 10, 20);
-
-            if (hero.Hitbox.HitboxRect.Intersects(headHitbox) && hero.Velocity.Y > 0)
-            {
-                hero.Velocity.Y = -12f;
-                TakeDamage(1);
-                return;
-            }
+            // OUDE CODE VERWIJDERD: De PlayingState regelt nu het springen (stomp)
+            // Dit voorkomt dubbele code en maakt het SOLID.
 
             if (!_isAttacking && Hitbox.Intersects(hero.Hitbox.HitboxRect))
             {
@@ -78,12 +74,12 @@ namespace test
                 {
                     IsHitting = (_damageCooldown <= 0);
                     int attackX = FacingRight ? Hitbox.Right : Hitbox.Left - ATTACK_RANGE;
-                    AttackHitbox = new Microsoft.Xna.Framework.Rectangle(attackX, Hitbox.Y, ATTACK_RANGE, Hitbox.Height);
+                    AttackHitbox = new Rectangle(attackX, Hitbox.Y, ATTACK_RANGE, Hitbox.Height);
                 }
                 else
                 {
                     IsHitting = false;
-                    AttackHitbox = Microsoft.Xna.Framework.Rectangle.Empty;
+                    AttackHitbox = Rectangle.Empty;
                 }
 
                 if (_currentAnim.IsFinished)
@@ -114,7 +110,7 @@ namespace test
 
         protected override void UpdateHitbox()
         {
-            Hitbox = new Microsoft.Xna.Framework.Rectangle((int)Position.X, (int)Position.Y, WIDTH, HEIGHT);
+            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, WIDTH, HEIGHT);
         }
 
         public override void Draw(SpriteBatch sb)
