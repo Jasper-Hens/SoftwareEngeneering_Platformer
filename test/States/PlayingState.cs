@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using test.Levels;
 using test.Objects;
-// Voeg deze toe zodat we bij de statische variabele van EvilWizard kunnen
 
 namespace test.States
 {
@@ -20,8 +19,6 @@ namespace test.States
 
         private bool _isTransitioning = false;
         private float _fadeOpacity = 0f;
-        // _pixel is nu 'internal' zodat andere klassen in dezelfde assembly hem kunnen zien indien nodig,
-        // maar we gaan hem specifiek doorgeven.
         internal Texture2D _pixel;
         private bool _fadingOut = false;
 
@@ -46,10 +43,7 @@ namespace test.States
             _pixel = new Texture2D(_game.GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
-            // --- NIEUW: GEEF DE DEBUG PIXEL AAN DE EVILWIZARD KLASSE ---
-            // Dit stelt de wizard in staat om zijn hitboxes te tekenen.
             EvilWizard.DebugPixel = _pixel;
-            // -----------------------------------------------------------
 
             _idleTexture = _content.Load<Texture2D>("Idle");
             _runTexture = _content.Load<Texture2D>("Run");
@@ -172,17 +166,13 @@ namespace test.States
 
                 if (enemy.IsHitting && !enemy.IsDead)
                 {
-                    // Check: Rolt de held NIET? En raken ze elkaar?
                     if (!_hero.IsRolling && enemy.AttackHitbox.Intersects(_hero.Hitbox.HitboxRect))
                     {
                         _hero.TakeDamage(1);
-
-                        // --- NIEUW: VERTEL DE ENEMY DAT HIJ RAAK HEEFT GESLAGEN ---
                         if (enemy is EvilWizard wizard)
                         {
-                            wizard.OnHitSuccesful(); // Dit zet de cooldown aan
+                            wizard.OnHitSuccesful();
                         }
-                        // -----------------------------------------------------------
                     }
                 }
             }
@@ -205,6 +195,7 @@ namespace test.States
                     _fadingOut = true;
                 }
             }
+            // (EntryDoor hoeft geen update logica te hebben omdat hij alleen maar open staat en niks doet)
 
             if (_hero.Position.Y > _currentLevel.Height + 100)
             {
@@ -216,6 +207,39 @@ namespace test.States
             if (_levelIndex == 1 && _currentLevel.Enemies.Count == 0 && !_showVictoryScreen)
             {
                 _showVictoryScreen = true;
+            }
+
+            foreach (var spike in _currentLevel.SpikesObjects)
+            {
+                // Check of de speler de spikes raakt
+                if (_hero.Hitbox.HitboxRect.Intersects(spike.Hitbox))
+                {
+                    // 1. Speler krijgt damage (Hero regelt zelf de invincibility timer)
+                    _hero.TakeDamage(1);
+
+                    // 2. Speler vliegt de lucht in (Knockback effect)
+                    // We zetten de verticale snelheid hard op -10 (omhoog)
+                    _hero.Velocity.Y = -10f;
+                }
+            }
+
+            // --- CHECK VOOR SPINNING BLADES ---
+            foreach (var blade in _currentLevel.Blades)
+            {
+                // 1. Zorg dat de animatie afspeelt
+                blade.Update(gameTime);
+
+                // 2. Check botsing met speler
+                if (_hero.Hitbox.HitboxRect.Intersects(blade.Hitbox))
+                {
+                    _hero.TakeDamage(1);
+
+                    // Optioneel: Knockback (bijv. opzij of omhoog)
+                    // Als je wilt dat hij wegvliegt als hij de blade raakt:
+                    if (_hero.Position.X < blade.Hitbox.X) _hero.Velocity.X = -10; // Naar links beuken
+                    else _hero.Velocity.X = 10; // Naar rechts beuken
+                    _hero.Velocity.Y = -5; // Beetje omhoog
+                }
             }
         }
 
@@ -254,7 +278,22 @@ namespace test.States
             _floorLayer.Draw(sb, _camera.Position);
             _pillarsLayer.Draw(sb, _camera.Position);
 
+            foreach (var spike in _currentLevel.SpikesObjects)
+            {
+                spike.Draw(sb);
+            }
+
+
+            // --- VOEG DEZE REGEL TOE ---
+            foreach (var blade in _currentLevel.Blades) blade.Draw(sb);
+            // ---------------------------
+
             foreach (var block in _currentLevel.Blocks) block.Draw(sb);
+
+            // --- HIER TEKENEN WE DE ENTRY DOOR (ALS DIE ER IS) ---
+            if (_currentLevel.EntryDoor != null) _currentLevel.EntryDoor.Draw(sb);
+            // -----------------------------------------------------
+
             if (_currentLevel.ExitDoor != null) _currentLevel.ExitDoor.Draw(sb);
             foreach (var item in _currentLevel.Items) item.Draw(sb);
             foreach (var enemy in _currentLevel.Enemies) enemy.Draw(sb);

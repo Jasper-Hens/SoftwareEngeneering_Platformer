@@ -19,7 +19,7 @@ namespace test.Objects
 
         // --- HIER ZIJN JE SPRITE FRAMES ---
         private Rectangle _closedFrameRect = new Rectangle(25, 409, 77, 83);
-        private Rectangle _OpeningSourceRect = new Rectangle(154, 409, 77, 83); // <--- Toegevoegd!
+        private Rectangle _OpeningSourceRect = new Rectangle(154, 409, 77, 83);
         private Rectangle _openFrameRect = new Rectangle(283, 409, 77, 83);
         // ----------------------------------
 
@@ -32,13 +32,10 @@ namespace test.Objects
             _openAnimation = new SimpleAnimation(animSheet);
             _openAnimation.IsLooping = false;
 
-            // Snelheid van de animatie (optioneel, standaard is 100ms)
-            // _openAnimation.Speed = 150; 
-
-            // We gebruiken nu de variabelen die we hierboven hebben gemaakt
-            _openAnimation.Frames.Add(_closedFrameRect);   // Frame 1: Dicht
-            _openAnimation.Frames.Add(_OpeningSourceRect); // Frame 2: Half open (HIER WORDT HIJ GEBRUIKT)
-            _openAnimation.Frames.Add(_openFrameRect);     // Frame 3: Open
+            // Frames toevoegen
+            _openAnimation.Frames.Add(_closedFrameRect);   // Frame 0: Dicht
+            _openAnimation.Frames.Add(_OpeningSourceRect); // Frame 1: Half open
+            _openAnimation.Frames.Add(_openFrameRect);     // Frame 2: Open
         }
 
         public void Update(GameTime gameTime, Hero hero)
@@ -75,6 +72,15 @@ namespace test.Objects
         private void Open()
         {
             _isAnimating = true;
+        }
+
+        // --- NIEUW: DEUR FORCEREN OM OPEN TE ZIJN (VOOR STARTLEVELS) ---
+        public void ForceOpen()
+        {
+            IsOpen = true;
+            _isAnimating = false;
+            // Zet de animatie direct op het laatste frame (frame index 2 is de open-status)
+            _openAnimation.CurrentFrame = 2;
         }
 
         public void Draw(SpriteBatch sb)
