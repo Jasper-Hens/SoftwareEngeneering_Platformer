@@ -13,18 +13,6 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin ../../../../../../../platformer/GameOver.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:../../../../../../../platformer/GameOver.png;GameState/GameOver.png
-
 #begin Attacks/Attack 1.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -516,6 +504,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:EvilWizard/Take Hit.png
+
+#begin GameState/GameOver.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:GameState/GameOver.png
 
 #begin GameState/VictoryV1.jpg
 /importer:TextureImporter

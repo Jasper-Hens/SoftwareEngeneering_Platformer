@@ -33,6 +33,7 @@
 	<ItemGroup>
 	  <Folder Include="Animations\DemonAnimations\Demon1\" />
 	  <Folder Include="Animations\DemonAnimations\Demon3\" />
+	  <Folder Include="Content\Sounds\" />
 	  <Folder Include="enemies\" />
 	</ItemGroup>
 	<Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">
