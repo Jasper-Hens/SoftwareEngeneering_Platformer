@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 
 namespace test.Animations;
 
@@ -8,7 +7,7 @@ public class RollAnimation : Animation
 {
     public RollAnimation(Texture2D texture) : base(texture)
     {
-       
+
         int frames = 6;
         int frameWidth = texture.Width / frames;
         int frameHeight = texture.Height;

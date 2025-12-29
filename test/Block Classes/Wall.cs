@@ -1,10 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using test.block_Interfaces;
 using test.Blocks;
 
@@ -24,7 +19,7 @@ namespace test.Block_Classes
         // Plaatst de sprite onderaan de 64x64 grid cel.
         private static Rectangle CalculateWorldRect(int gridX, int gridY, int spriteWidth, int spriteHeight)
         {
-            int worldX = gridX * TILE_GRID_SIZE; 
+            int worldX = gridX * TILE_GRID_SIZE;
             int worldY = (gridY * TILE_GRID_SIZE) + (TILE_GRID_SIZE - spriteHeight);
 
             return new Rectangle(worldX, worldY, spriteWidth, spriteHeight);

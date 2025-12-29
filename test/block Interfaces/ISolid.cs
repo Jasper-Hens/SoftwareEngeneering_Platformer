@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace test.block_Interfaces
+﻿namespace test.block_Interfaces
 {
     public interface ISolid
     {

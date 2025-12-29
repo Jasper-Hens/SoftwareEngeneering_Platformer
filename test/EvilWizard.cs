@@ -4,22 +4,19 @@ using System.Collections.Generic;
 using test.Animations;
 using test.Animations.EvilWizardAnimations;
 using test.Blocks;
-using test.Level;
 
 namespace test
 {
     public class EvilWizard : Enemy
     {
-        public static Texture2D DebugPixel;
+        public static Texture2D DebugPixel; // Voor hitbox debuggen
 
-        private Animation _idleAnim;
-        private Animation _attackAnim;
-        private Animation _deathAnim;
-        private Animation _currentAnim;
-
+        private Animation _idleAnim, _attackAnim, _deathAnim, _currentAnim;
         private double _attackTimer;
         private double _attackInterval = 3000;
         private bool _isAttacking = false;
+
+        // Cooldown zodat hij niet elke frame damage doet als hij aanvalt
         private double _damageCooldown = 0;
 
         private const int BODY_WIDTH = 54;
@@ -28,17 +25,22 @@ namespace test
         private const int ATTACK_BOX_HEIGHT = 64;
 
         public EvilWizard(Texture2D idleTex, Texture2D attackTex, Texture2D deathTex, Vector2 startPosition)
-            : base(startPosition, 40)
+            : base(startPosition, 40) // 40 HP
         {
             _idleAnim = new EvilWizardIdleAnimation(idleTex);
             _attackAnim = new EvilWizardAttackAnimation(attackTex);
             _deathAnim = new EvilWizardDeathAnimation(deathTex);
 
             _currentAnim = _idleAnim;
-
-            IsStompable = true;
-
+            IsStompable = true; // Je kan op zijn hoofd springen!
             UpdateHitbox();
+        }
+
+        // SOLID: Deze methode wordt aangeroepen door CollisionManager
+        public override void OnPlayerHit()
+        {
+            // Als we de speler raken, zetten we een cooldown zodat we niet 60x per seconde damage doen
+            _damageCooldown = 1000;
         }
 
         protected override void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks)
@@ -47,19 +49,14 @@ namespace test
 
             if (IsDead)
             {
-                if (_currentAnim != _deathAnim)
-                {
-                    _currentAnim = _deathAnim;
-                    _currentAnim.Reset();
-                    IsHitting = false;
-                    AttackHitbox = Rectangle.Empty;
-                }
-                _currentAnim.Update(gameTime);
+                HandleDeathAnimation(gameTime);
                 return;
             }
 
+            // Kijk naar de speler
             FacingRight = hero.Position.X > Position.X;
 
+            // Attack logica
             if (!_isAttacking)
             {
                 _attackTimer += gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -68,22 +65,9 @@ namespace test
 
             _currentAnim.Update(gameTime);
 
-            if (_isAttacking && _currentAnim.IsFinished)
-            {
-                _isAttacking = false;
-                _currentAnim = _idleAnim;
-                _attackTimer = 0;
-                IsHitting = false;
-                AttackHitbox = Rectangle.Empty;
-            }
-
             if (_isAttacking)
             {
-                if (_damageCooldown <= 0) IsHitting = true;
-                else IsHitting = false;
-
-                int attackX = FacingRight ? (int)Position.X + BODY_WIDTH : (int)Position.X - ATTACK_BOX_WIDTH;
-                AttackHitbox = new Rectangle(attackX, (int)Position.Y + 20, ATTACK_BOX_WIDTH, ATTACK_BOX_HEIGHT);
+                HandleAttackState();
             }
             else
             {
@@ -92,14 +76,39 @@ namespace test
             }
         }
 
-        public void OnHitSuccesful()
+        private void HandleDeathAnimation(GameTime gameTime)
         {
-            _damageCooldown = 1000;
+            if (_currentAnim != _deathAnim)
+            {
+                _currentAnim = _deathAnim;
+                _currentAnim.Reset();
+                IsHitting = false;
+                AttackHitbox = Rectangle.Empty;
+            }
+            _currentAnim.Update(gameTime);
+
+            // Als de animatie klaar is, mag hij weg uit het level
+            if (_currentAnim.IsFinished) ReadyToRemove = true;
         }
 
-        protected override void UpdateHitbox()
+        private void HandleAttackState()
         {
-            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, BODY_WIDTH, BODY_HEIGHT);
+            if (_currentAnim.IsFinished)
+            {
+                _isAttacking = false;
+                _currentAnim = _idleAnim;
+                _attackTimer = 0;
+                IsHitting = false;
+                AttackHitbox = Rectangle.Empty;
+            }
+            else
+            {
+                // Alleen damage doen als cooldown klaar is
+                IsHitting = (_damageCooldown <= 0);
+
+                int attackX = FacingRight ? (int)Position.X + BODY_WIDTH : (int)Position.X - ATTACK_BOX_WIDTH;
+                AttackHitbox = new Rectangle(attackX, (int)Position.Y + 20, ATTACK_BOX_WIDTH, ATTACK_BOX_HEIGHT);
+            }
         }
 
         private void StartAttack()
@@ -109,8 +118,14 @@ namespace test
             _currentAnim.Reset();
         }
 
+        protected override void UpdateHitbox()
+        {
+            Hitbox = new Rectangle((int)Position.X, (int)Position.Y, BODY_WIDTH, BODY_HEIGHT);
+        }
+
         public override void Draw(SpriteBatch sb)
         {
+            // Teken logic... (Hetzelfde als voorheen)
             if (IsDead && _currentAnim.IsFinished) return;
 
             Rectangle currentFrame = _currentAnim.Frames[_currentAnim.CurrentFrame];
@@ -123,10 +138,11 @@ namespace test
 
             _currentAnim.Draw(sb, drawPos, FacingRight, _color, 2.0f);
 
+            // Debug optie
             if (DebugPixel != null)
             {
-                sb.Draw(DebugPixel, Hitbox, Color.Red * 0.5f);
-                if (IsHitting) sb.Draw(DebugPixel, AttackHitbox, Color.Orange * 0.5f);
+                // sb.Draw(DebugPixel, Hitbox, Color.Red * 0.5f);
+                // if (IsHitting) sb.Draw(DebugPixel, AttackHitbox, Color.Orange * 0.5f);
             }
         }
     }

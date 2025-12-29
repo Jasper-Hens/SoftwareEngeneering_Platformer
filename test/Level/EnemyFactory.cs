@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using test.Objects;   // Voor Enemy class
-using test.Levels;    // Voor specifieke vijanden zoals Demon2, EvilWizard, etc.
 
 namespace test.Level
 {

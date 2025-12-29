@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace test.block_Interfaces
+﻿namespace test.block_Interfaces
 {
     // Dit is een 'Marker Interface' (leeg), of je kan er methodes aan toevoegen
     public interface IPlatform

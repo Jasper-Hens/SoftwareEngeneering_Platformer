@@ -1,40 +1,43 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using test.Blocks;
-using test.block_Interfaces;
-using test.Effects;
-// Zorg dat deze namespaces kloppen met jouw mappen!
 using test.Animations;
 using test.Animations.HeroAnimations;
+using test.block_Interfaces;
+using test.Blocks;
+using test.Inputs; // Nieuwe namespace
+using test.Interfaces; // Nieuwe namespace
+using test.Effects;
 
 namespace test
 {
-    public class Hero
+    public class Hero : IDamageable
     {
+        private IInputReader _inputReader; // SRP: Input is apart
+
         // Animaties
         private Animation _idle, _run, _jump;
         private Animation _attack1, _attack2, _attack3, _runAttack;
         private Animation _rollAnim;
-
         private Animation _current;
         private VisualEffect _airSlashEffect;
 
         // Physics
-        public Vector2 Position = new Vector2(100, 100);
+        public Vector2 Position; // Public gemaakt voor eenvoud, kan property zijn
         public Vector2 Velocity = Vector2.Zero;
         public bool IsRunningRight = false, IsRunningLeft = false, Jump = false, FacingRight = true;
 
         // Hitbox & Stats
-        public Hitbox Hitbox { get; private set; }
+        public Hitbox HitboxObject { get; private set; } // Hernoemd om verwarring met Interface property te voorkomen
+        public Rectangle Hitbox => HitboxObject.HitboxRect; // Implementatie IDamageable
+
         public Rectangle AttackHitbox { get; private set; }
         public bool IsHitting { get; private set; } = false;
         public bool IsAttacking { get; private set; } = false;
 
         private float gravity = 0.5f;
         private float moveSpeed = 4f;
-        private float jumpStrength = -12f; // Iets hoger springen
+        private float jumpStrength = -12f;
         private const int HITBOX_WIDTH = 45;
         private const int HITBOX_HEIGHT = 65;
 
@@ -42,7 +45,6 @@ namespace test
         private int _comboIndex = 0;
         private double _comboTimer = 0;
         private const double COMBO_WINDOW = 1000;
-        private bool _wasAttackPressed = false;
 
         // Health & Stamina
         public int MaxHealth { get; private set; } = 6;
@@ -51,11 +53,8 @@ namespace test
         public float MaxStamina { get; private set; } = 100f;
         public float CurrentStamina { get; private set; }
 
-        // --- AANPASSING HIER ---
         public bool IsDashing { get; private set; } = false;
-        // We voegen deze regel toe zodat 'IsRolling' hetzelfde betekent als 'IsDashing'
         public bool IsRolling => IsDashing;
-        // -----------------------
 
         private double _invincibilityTimer = 0;
         private Color _heroColor = Color.White;
@@ -66,15 +65,19 @@ namespace test
         private double _dashCooldown = 0;
         private float _dashSpeed = 9f;
 
-        // Inventory
         public Inventory Inventory { get; private set; }
 
+        // CONSTRUCTOR AANGEPAST: InputReader toegevoegd
         public Hero(Texture2D idleTex, Texture2D runTex, Texture2D jumpTex,
                     Texture2D atk1Tex, Texture2D atk2Tex, Texture2D atk3Tex,
                     Texture2D runAtkTex, Texture2D slashTex,
-                    Texture2D rollTex)
+                    Texture2D rollTex, IInputReader inputReader)
         {
+            _inputReader = inputReader;
             Inventory = new Inventory();
+
+            // Zet startpositie
+            Position = new Vector2(100, 100);
 
             _idle = new IdleAnimation(idleTex);
             _run = new RunAnimation(runTex);
@@ -83,7 +86,7 @@ namespace test
             _attack2 = new AttackTwoAnimation(atk2Tex);
             _attack3 = new AttackThreeAnimation(atk3Tex);
             _runAttack = new RunAttackAnimation(runAtkTex);
-            _rollAnim = new RollAnimation(rollTex); // Zorg dat RollAnimation in test.Animations staat
+            _rollAnim = new RollAnimation(rollTex);
 
             _attack1.IsLooping = false; _attack2.IsLooping = false; _attack3.IsLooping = false;
             _runAttack.IsLooping = false; _rollAnim.IsLooping = false;
@@ -95,10 +98,13 @@ namespace test
 
             _airSlashEffect = new VisualEffect(slashTex, 64, 64, 4);
             _current = _idle;
-            Hitbox = new Hitbox();
+            HitboxObject = new Hitbox();
             CurrentHealth = MaxHealth;
             CurrentStamina = MaxStamina;
         }
+
+        // Interface method
+        public void TakeDamage(int damage) => TakeDamage(damage, false);
 
         public void TakeDamage(int damage, bool ignoreDash = false)
         {
@@ -116,13 +122,11 @@ namespace test
         {
             if (IsDead) return;
 
-            // 1. INPUT CHECK
-            KeyboardState k = Keyboard.GetState();
-
-            // Zet flags op basis van input
-            IsRunningRight = k.IsKeyDown(Keys.Right) || k.IsKeyDown(Keys.D);
-            IsRunningLeft = k.IsKeyDown(Keys.Left) || k.IsKeyDown(Keys.Q);
-            Jump = k.IsKeyDown(Keys.Space);
+            // 1. INPUT CHECK via Interface (Geen Keyboard meer hier!)
+            Vector2 inputDir = _inputReader.ReadMovement();
+            IsRunningRight = inputDir.X > 0;
+            IsRunningLeft = inputDir.X < 0;
+            Jump = _inputReader.IsJumpPressed();
 
             // 2. Stamina
             if (!IsDashing && CurrentStamina < MaxStamina)
@@ -132,7 +136,7 @@ namespace test
             }
             if (_dashCooldown > 0) _dashCooldown -= gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            // 3. Invincibility Blink
+            // 3. Invincibility
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -159,17 +163,14 @@ namespace test
                 }
                 MoveAndCollide(blocks);
                 _current.Update(gameTime);
-                Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+                HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
                 return;
             }
 
             // 5. DASH STARTEN
-            if (k.IsKeyDown(Keys.LeftShift) && !IsDashing && !IsAttacking && _dashCooldown <= 0)
+            if (_inputReader.IsDashPressed() && !IsDashing && !IsAttacking && _dashCooldown <= 0)
             {
-                if (CurrentStamina >= _dashCost && IsOnGround(blocks))
-                {
-                    StartDash();
-                }
+                if (CurrentStamina >= _dashCost && IsOnGround(blocks)) StartDash();
             }
 
             IsHitting = false;
@@ -182,11 +183,9 @@ namespace test
                 if (_comboTimer > COMBO_WINDOW) _comboIndex = 0;
             }
 
-            bool isAttackPressed = k.IsKeyDown(Keys.Z) || k.IsKeyDown(Keys.J); // Z of J voor attack
-            if (isAttackPressed && !_wasAttackPressed && !IsAttacking) StartAttack();
-            _wasAttackPressed = isAttackPressed;
+            if (_inputReader.IsAttackPressed() && !IsAttacking) StartAttack();
 
-            // 7. BEWEGING TOEPASSEN
+            // 7. BEWEGING
             bool movementLocked = IsAttacking && _current != _runAttack;
             Velocity.X = 0;
             if (!movementLocked)
@@ -200,7 +199,7 @@ namespace test
             Velocity.Y += gravity;
             MoveAndCollide(blocks);
 
-            // 8. ANIMATIE STATE MACHINE
+            // 8. ANIMATIE
             if (IsAttacking)
             {
                 if (_current.DamageFrames.Contains(_current.CurrentFrame))
@@ -233,7 +232,7 @@ namespace test
 
             _current.Update(gameTime);
             _airSlashEffect.Update(gameTime);
-            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+            HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
         }
 
         private void StartDash()
@@ -265,15 +264,19 @@ namespace test
             ResolveCollisionsY(blocks);
         }
 
+        // ... (De rest van de private collision/draw methodes blijven hetzelfde) ...
+        // Zorg alleen dat je 'Hitbox' vervangt door 'HitboxObject' waar je de class aanroept, 
+        // en 'HitboxObject.HitboxRect' gebruikt waar je de Rectangle nodig hebt.
+
         private bool IsOnGround(List<Block> blocks)
         {
-            Rectangle footCheckRect = Hitbox.HitboxRect;
+            Rectangle footCheckRect = HitboxObject.HitboxRect;
             footCheckRect.Y += 1;
             foreach (var block in blocks)
             {
                 if ((block is ISolid || block is IPlatform) && footCheckRect.Intersects(block.BoundingBox))
                 {
-                    if (Hitbox.HitboxRect.Bottom <= block.BoundingBox.Top + 1) return true;
+                    if (HitboxObject.HitboxRect.Bottom <= block.BoundingBox.Top + 1) return true;
                 }
             }
             return false;
@@ -281,36 +284,36 @@ namespace test
 
         private void ResolveCollisionsX(List<Block> blocks)
         {
-            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
-            Rectangle skinnyRect = Hitbox.HitboxRect;
+            HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+            Rectangle skinnyRect = HitboxObject.HitboxRect;
             skinnyRect.Y += 4; skinnyRect.Height -= 8;
 
             foreach (var block in blocks)
             {
                 if (block is ISolid && skinnyRect.Intersects(block.BoundingBox))
                 {
-                    Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, block.BoundingBox);
+                    Rectangle intersection = Rectangle.Intersect(HitboxObject.HitboxRect, block.BoundingBox);
                     if (Velocity.X > 0) Position.X -= intersection.Width;
                     else if (Velocity.X < 0) Position.X += intersection.Width;
                     Velocity.X = 0;
-                    Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+                    HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
                 }
             }
         }
 
         private void ResolveCollisionsY(List<Block> blocks)
         {
-            Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+            HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
             foreach (var block in blocks)
             {
-                if ((block is ISolid || block is IPlatform) && Hitbox.HitboxRect.Intersects(block.BoundingBox))
+                if ((block is ISolid || block is IPlatform) && HitboxObject.HitboxRect.Intersects(block.BoundingBox))
                 {
-                    Rectangle intersection = Rectangle.Intersect(Hitbox.HitboxRect, block.BoundingBox);
+                    Rectangle intersection = Rectangle.Intersect(HitboxObject.HitboxRect, block.BoundingBox);
                     if (intersection.Height < intersection.Width)
                     {
                         if (Velocity.Y > 0)
                         {
-                            if (block is IPlatform && Hitbox.HitboxRect.Bottom - intersection.Height > block.BoundingBox.Top) continue;
+                            if (block is IPlatform && HitboxObject.HitboxRect.Bottom - intersection.Height > block.BoundingBox.Top) continue;
                             Position.Y -= intersection.Height;
                             Velocity.Y = 0;
                         }
@@ -319,7 +322,7 @@ namespace test
                             Position.Y += intersection.Height;
                             Velocity.Y = 0;
                         }
-                        Hitbox.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
+                        HitboxObject.Update(Position, HITBOX_WIDTH, HITBOX_HEIGHT);
                     }
                 }
             }
@@ -327,46 +330,28 @@ namespace test
 
         public void Reset()
         {
-            CurrentHealth = MaxHealth; // Levens vol
-            CurrentStamina = MaxStamina; // Stamina vol
+            CurrentHealth = MaxHealth;
+            CurrentStamina = MaxStamina;
             IsDead = false;
-
-            // Maak de inventory leeg
-            if (Inventory != null)
-            {
-                Inventory.Clear();
-            }
+            Inventory?.Clear();
         }
+
         public void Heal(int amount)
         {
             CurrentHealth += amount;
-
-            // Zorg dat we niet meer levens krijgen dan het maximum
-            if (CurrentHealth > MaxHealth)
-            {
-                CurrentHealth = MaxHealth;
-            }
+            if (CurrentHealth > MaxHealth) CurrentHealth = MaxHealth;
         }
 
         public void Draw(SpriteBatch sb)
         {
             Rectangle currentFrame = _current.Frames[_current.CurrentFrame];
-
-            // 1. Horizontaal centreren (zoals je al had)
             float widthDifference = currentFrame.Width - HITBOX_WIDTH;
             float drawX = Position.X - (widthDifference / 2);
-
-            // 2. NIEUW: Verticaal uitlijnen op de grond (Onderkant hitbox)
-            // Dit zorgt ervoor dat als je rolt (klein plaatje), je netjes op de grond blijft
-            // en niet zweeft of zakt.
             float heightDifference = HITBOX_HEIGHT - currentFrame.Height;
             float drawY = Position.Y + heightDifference;
 
             Vector2 drawPosition = new Vector2(drawX, drawY);
-
-            // Teken de held
             _current.Draw(sb, drawPosition, FacingRight, _heroColor);
-
             _airSlashEffect.Draw(sb);
         }
     }

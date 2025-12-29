@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 
 namespace test
 {
@@ -39,10 +38,10 @@ namespace test
             float cameraX = targetX - (_viewportWidth / 2);
 
             // 2. Beperk de X-positie (horizontaal begrenzen).
-            
+
             // Linker grens: Camera mag niet verder naar links dan 0.
             float minCameraX = 0;
-            
+
             // Rechter grens: Camera stopt wanneer de rechterkant van het scherm
             // de rechterkant van het level bereikt.
             float maxCameraX = _levelWidth - _viewportWidth;
@@ -58,7 +57,7 @@ namespace test
             float targetY = targetPosition.Y;
             float cameraY = targetY - (_viewportHeight / 2);
             float maxCameraY = _levelHeight - _viewportHeight;
-            
+
             cameraY = MathHelper.Clamp(cameraY, 0, maxCameraY);
 
             Position = new Vector2(cameraX, cameraY);

@@ -2,26 +2,30 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using test.Blocks;
-using test.block_Interfaces; // Zorg dat deze klopt met jouw namespace
+using test.block_Interfaces;
+using test.Interfaces; // Vergeet deze niet!
 
 namespace test
 {
-    public abstract class Enemy
+    public abstract class Enemy : IDamageable
     {
         public Vector2 Position;
         public Vector2 Velocity;
         public bool FacingRight = false;
 
-        public bool IsDead = false;
+        // IDamageable implementatie
+        public bool IsDead { get; protected set; } = false;
+
+        // Een flag om de enemy veilig uit de lijst te verwijderen in PlayingState
         public bool ReadyToRemove { get; protected set; } = false;
 
-        // --- SOLID: EIGENSCHAP OM TE BEPALEN OF JE EROP KUNT SPRINGEN ---
+        // SOLID: Eigenschap om te bepalen of de speler hierop kan springen (Mario-style)
         public virtual bool IsStompable { get; protected set; } = false;
-        // ---------------------------------------------------------------
 
         public int MaxHealth { get; protected set; }
         public int CurrentHealth { get; protected set; }
 
+        // Hitboxes
         public Rectangle Hitbox { get; protected set; }
         public Rectangle AttackHitbox { get; protected set; }
         public bool IsHitting { get; protected set; } = false;
@@ -37,21 +41,35 @@ namespace test
             CurrentHealth = maxHealth;
         }
 
+        // SOLID: Nieuwe virtuele methode. 
+        // Hierdoor hoeft PlayingState niet te weten welk type enemy het is.
+        public virtual void OnPlayerHit()
+        {
+            // Standaard gedrag: doe niets. 
+            // Specifieke vijanden (zoals EvilWizard) kunnen dit overschrijven.
+        }
+
         public virtual void Update(GameTime gameTime, List<Block> blocks, Hero hero)
         {
-            // 1. Visuals
+            // 1. Visuals & Invincibility frames
             if (_invincibilityTimer > 0)
             {
                 _invincibilityTimer -= gameTime.ElapsedGameTime.TotalMilliseconds;
+                // Knipper effect als je geraakt bent
                 _color = _invincibilityTimer % 200 < 100 ? Color.Red : Color.White;
             }
-            else _color = Color.White;
+            else
+            {
+                _color = Color.White;
+            }
 
             // 2. Physics & AI
             Velocity.Y += _gravity;
+
+            // AI wordt geregeld door de subklassen (Template Method Pattern)
             UpdateAI(gameTime, hero, blocks);
 
-            // 3. Beweging
+            // 3. Beweging toepassen
             Position.X += Velocity.X;
             ResolveCollisionsX(blocks);
 
@@ -61,12 +79,14 @@ namespace test
             UpdateHitbox();
         }
 
+        // IDamageable implementatie
         public virtual void TakeDamage(int damage)
         {
             if (_invincibilityTimer <= 0 && !IsDead)
             {
                 CurrentHealth -= damage;
-                _invincibilityTimer = 200;
+                _invincibilityTimer = 200; // Korte onsterfelijkheid na hit
+
                 if (CurrentHealth <= 0)
                 {
                     CurrentHealth = 0;
@@ -75,10 +95,12 @@ namespace test
             }
         }
 
+        // Abstracte methodes die subklassen MOETEN invullen
         protected abstract void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks);
         protected abstract void UpdateHitbox();
         public abstract void Draw(SpriteBatch sb);
 
+        // --- Collision Logic (Hetzelfde gebleven, werkt prima) ---
         protected void ResolveCollisionsX(List<Block> blocks)
         {
             UpdateHitbox();

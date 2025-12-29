@@ -2,10 +2,8 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using test;
 using test.Blocks;
 using test.Items;
-using test.Level; // Let op: als je map 'Levels' heet, kan deze overbodig zijn, maar kan geen kwaad.
 using test.Objects;
 
 namespace test.Levels

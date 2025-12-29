@@ -15,7 +15,7 @@ public class AttackOneAnimation : Animation
         Frames.Add(new Rectangle(26, 22, 43, 64));    // sprite3
         Frames.Add(new Rectangle(92, 22, 59, 64));    // sprite4
         Frames.Add(new Rectangle(174, 22, 64, 64));   // sprite5
-        
+
 
     }
 }

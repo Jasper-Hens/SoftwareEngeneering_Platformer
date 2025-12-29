@@ -23,7 +23,7 @@ namespace test
         private const int ATTACK_RANGE = 40;
 
         public Demon2(Texture2D walkTex, Texture2D attackTex, Texture2D deathTex, Vector2 startPosition)
-            : base(startPosition, 1)
+            : base(startPosition, 1) // 1 Leven
         {
             _walkAnim = new Demon2WalkAnimation(walkTex);
             _attackAnim = new Demon2AttackAnimation(attackTex);
@@ -31,12 +31,15 @@ namespace test
 
             _currentAnim = _walkAnim;
 
-            // --- SOLID: OOK DEZE VIJAND KUN JE DODEN DOOR TE SPRINGEN ---
             IsStompable = true;
-            // ------------------------------------------------------------
-
             FacingRight = true;
             UpdateHitbox();
+        }
+
+        // SOLID: Gebruik de override van de base class
+        public override void OnPlayerHit()
+        {
+            _damageCooldown = 1000;
         }
 
         protected override void UpdateAI(GameTime gameTime, Hero hero, List<Block> blocks)
@@ -52,15 +55,16 @@ namespace test
                     AttackHitbox = Rectangle.Empty;
                 }
                 _currentAnim.Update(gameTime);
+
+                // Zorg dat hij opgeruimd wordt als animatie klaar is
+                if (_currentAnim.IsFinished) ReadyToRemove = true;
                 return;
             }
 
             if (_damageCooldown > 0) _damageCooldown -= gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            // OUDE CODE VERWIJDERD: De PlayingState regelt nu het springen (stomp)
-            // Dit voorkomt dubbele code en maakt het SOLID.
-
-            if (!_isAttacking && Hitbox.Intersects(hero.Hitbox.HitboxRect))
+            // FIX: hero.Hitbox is nu een Rectangle, dus .HitboxRect mag weg
+            if (!_isAttacking && Hitbox.Intersects(hero.Hitbox))
             {
                 StartAttack();
             }
@@ -94,6 +98,7 @@ namespace test
                 _currentAnim = _walkAnim;
                 _currentAnim.Update(gameTime);
                 float speed = 2.0f;
+                // Simpele patrol logic
                 if (System.Math.Abs(Velocity.X) < 0.1f) FacingRight = !FacingRight;
                 Velocity.X = FacingRight ? speed : -speed;
             }
@@ -105,8 +110,6 @@ namespace test
             _currentAnim = _attackAnim;
             _currentAnim.Reset();
         }
-
-        public void OnHitSuccesful() { _damageCooldown = 1000; }
 
         protected override void UpdateHitbox()
         {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Content;
 
 namespace test.States
 {
@@ -25,11 +25,11 @@ namespace test.States
             _game.IsMouseVisible = true;
 
             // 1. ACHTERGROND
-           
+
             _backgroundTexture = _content.Load<Texture2D>("HomeScreen/HomeScreenPlatformer");
 
             // 2PLAY KNOP
-            _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton"); 
+            _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButton");
 
             // 3. POSITIE BEPALEN (Midden van scherm)
             int screenW = _game.GraphicsDevice.Viewport.Width;
@@ -51,7 +51,7 @@ namespace test.States
             if (_buttonRect.Contains(mouse.Position))
             {
                 //_buttonColor = Color.Red; // Maak knop donkerder als je erop zweeft (Hover effect)
-                _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButtonPressed"); 
+                _playButtonTexture = _content.Load<Texture2D>("HomeScreen/PlayButtonPressed");
 
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
