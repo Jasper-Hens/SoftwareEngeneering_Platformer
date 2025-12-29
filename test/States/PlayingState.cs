@@ -193,7 +193,7 @@ namespace test.States
             {
                 if (_hero.Hitbox.HitboxRect.Intersects(spike.Hitbox))
                 {
-                    _hero.TakeDamage(1);
+                    _hero.TakeDamage(1, true);
                     _hero.Velocity.Y = -10f;
                 }
             }
@@ -204,7 +204,7 @@ namespace test.States
                 blade.Update(gameTime);
                 if (_hero.Hitbox.HitboxRect.Intersects(blade.Hitbox))
                 {
-                    _hero.TakeDamage(1);
+                    _hero.TakeDamage(1, true); 
                     if (_hero.Position.X < blade.Hitbox.X) _hero.Velocity.X = -10;
                     else _hero.Velocity.X = 10;
                     _hero.Velocity.Y = -5;

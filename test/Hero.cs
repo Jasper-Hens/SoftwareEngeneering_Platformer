@@ -100,9 +100,9 @@ namespace test
             CurrentStamina = MaxStamina;
         }
 
-        public void TakeDamage(int damage)
+        public void TakeDamage(int damage, bool ignoreDash = false)
         {
-            if (IsDashing || _invincibilityTimer > 0 || IsDead) return;
+            if ((IsDashing && !ignoreDash) || _invincibilityTimer > 0 || IsDead) return;
 
             CurrentHealth -= damage;
             _invincibilityTimer = 1000;
