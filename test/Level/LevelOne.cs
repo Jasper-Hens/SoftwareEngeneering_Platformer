@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using System.Collections.Generic;
 using test.Items;
 using test.Objects;
 using test.Blocks;
@@ -10,97 +11,95 @@ namespace test.Levels
 {
     public class LevelOne : BaseLevel
     {
+        // --- LEGENDA ---
+        // 0 = Leeg, 1 = Vloer, 2 = Platform, 3 = Muur
+        // 10 = Spikes, 11 = Blade
+        // 20 = Key, 21 = Hartje
+        // 30 = Demon, 31 = Wizard, 35 = Boss
+        // 50 = Deur, 99 = Start Speler
+
         public override void LoadContent(ContentManager content, GraphicsDevice graphics)
         {
-            StartPosition = new Vector2(100, 300);
+            // We laden hier alleen de textures die de Factory NIET afhandelt (Blokken & Items)
+            Texture2D tiles = content.Load<Texture2D>("Tiles/tilesSpriteSheet");
+            Texture2D objSheet = content.Load<Texture2D>("Objects/ObjectSpriteSheet");
+            Texture2D itemSheet = content.Load<Texture2D>("Items/ItemSpritesheet");
+            Texture2D keyTex = content.Load<Texture2D>("Items/KeyV2");
 
-            // MAP DATA (Ingekort voor voorbeeld, gebruik jouw volledige map hier!)
+            // --- DE MAP (100 breed, 12 hoog) ---
             int[,] gameboard = new int[,]
             {
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-                { 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3 }
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,0,99,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,50,0,0,3 }, // 99=Start, 50=Deur
+                { 3,1,1,1,1,1,0,0,0,2, 2,2,0,0,0,1,1,1,0,0, 0,0,0,30,0,0,0,0,21,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,3 }, 
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,0,0,2,2,0, 0,0,31,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 1,1,1,1,0,0,0,0,0,2, 2,2,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,0,0,0,0,0,0,0,0,0, 0,0,20,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,3 },
+                { 3,1,1,1,1,1,1,1,0,0, 1,1,1,1,1,1,1,0,0,1, 1,1,1,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,1,1,1,1,1,0, 0,1,1,1,1,1,0,0,0,3 },
+                // HIER ZAT DE FOUT: Nu 60 items (waren er 50)
+                { 3,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,10,10,1, 1,1,1,1,1,10,10,10,10,10, 10,10,10,10,10,10,10,10,10,1, 1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,3 }, 
+                { 3,3,3,3,3,3,3,3,3,3, 3,3,3,3,3,3,3,3,3,3, 3,3,3,3,3,3,3,3,3,3, 3,3,3,3,3,3,3,3,3,3, 3,3,3,3,3,3,3,3,3,3, 3,3,3,3,3,3,3,3,3,3 }
             };
 
+            // Level afmetingen instellen
+            Width = gameboard.GetLength(1) * 64;
+            Height = gameboard.GetLength(0) * 64;
 
-            Texture2D tiles = content.Load<Texture2D>("Tiles/tilesSpriteSheet");
             for (int y = 0; y < gameboard.GetLength(0); y++)
             {
                 for (int x = 0; x < gameboard.GetLength(1); x++)
                 {
-                    Block b = BlockFactory.CreateBlock(gameboard[y, x], x, y, tiles);
-                    if (b != null) Blocks.Add(b);
+                    int tileId = gameboard[y, x];
+                    Vector2 pos = new Vector2(x * 64, y * 64);
+
+                    // 1. Blokken (via BlockFactory)
+                    Block b = BlockFactory.CreateBlock(tileId, x, y, tiles);
+                    if (b != null)
+                    {
+                        Blocks.Add(b);
+                        continue;
+                    }
+
+                    // 2. Vijanden (via de NIEUWE EnemyFactory)
+                    // We geven 'content' mee zodat de factory zelf textures laadt.
+                    Enemy e = EnemyFactory.CreateEnemy(tileId, pos, content, graphics);
+                    if (e != null)
+                    {
+                        Enemies.Add(e);
+                        continue;
+                    }
+
+                    // 3. Overige Objecten (Handmatig of via nog een andere factory)
+                    switch (tileId)
+                    {
+                        case 99: // Start
+                            StartPosition = pos;
+                            break;
+
+                        case 10: // Spikes
+                            SpikesObjects.Add(new Spikes(objSheet, new Vector2(pos.X, pos.Y + 14)));
+                            break;
+
+                        case 11: // Blade
+                            Blades.Add(new SpinningBlade(objSheet, pos));
+                            break;
+
+                        case 20: // Sleutel
+                            Items.Add(new KeyItem(keyTex, pos));
+                            break;
+
+                        case 21: // Hartje
+                            Items.Add(new HeartItem(itemSheet, pos));
+                            break;
+
+                        case 50: // Deur
+                            ExitDoor = new Door(objSheet, objSheet, new Vector2(pos.X, pos.Y - 5));
+                            break;
+                    }
                 }
             }
-
-            Width = gameboard.GetLength(1) * 64;
-            Height = gameboard.GetLength(0) * 64;
-
-            // ITEMS
-            //Texture2D itemSheet = content.Load<Texture2D>("Items/ItemSpritesheet");
-            // Items.Add(new KeyItem(itemSheet, new Vector2(100, 100)));
-
-            Texture2D Key = content.Load<Texture2D>("Items/KeyV2");
-            Items.Add(new KeyItem(Key, new Vector2(400, 650)));
-
-            // DEUR
-            Texture2D objSheet = content.Load<Texture2D>("Objects/ObjectSpriteSheet");
-            ExitDoor = new Door(objSheet, objSheet, new Vector2(300, 635));
-
-            // BOSS
-            Texture2D blokTex = new Texture2D(graphics, 1, 1); blokTex.SetData(new[] { Color.White });
-
-            Texture2D bIdle = content.Load<Texture2D>("Boss/Idle");
-            Texture2D bWalk = content.Load<Texture2D>("Boss/Walk");
-            Texture2D bRun = content.Load<Texture2D>("Boss/Run");
-            Texture2D bJump = content.Load<Texture2D>("Boss/Jump");
-            Texture2D bAtk1 = content.Load<Texture2D>("Boss/Attack");
-            Texture2D bAtk2 = content.Load<Texture2D>("Boss/Attack2");
-            Texture2D bAtk3 = content.Load<Texture2D>("Boss/Attack3");
-            Texture2D bWAtk = content.Load<Texture2D>("Boss/Walk_Attack");
-            Texture2D bSpec = content.Load<Texture2D>("Boss/Special");
-            Texture2D bHurt = content.Load<Texture2D>("Boss/Hurt");
-            Texture2D bDeath = content.Load<Texture2D>("Boss/Death");
-
-            KnightBoss boss = new KnightBoss(
-                new Vector2(600, 500),
-                blokTex,
-                bIdle, bWalk, bRun, bJump,
-                bAtk1, bAtk2, bAtk3, bWAtk, bSpec,
-                bHurt, bDeath
-            );
-            Enemies.Add(boss);
-
-            // --- NIEUW: EVIL WIZARD ---
-            Texture2D wizIdle = content.Load<Texture2D>("EvilWizard/Idle");
-            Texture2D wizAtk = content.Load<Texture2D>("EvilWizard/Attack");
-            Texture2D wizDeath = content.Load<Texture2D>("EVilWizard/Death");
-
-            // Voeg de wizard toe aan de enemies lijst
-            Enemies.Add(new EvilWizard(wizIdle, wizAtk, wizDeath, new Vector2(600, 400)));
-            // --------------------------
-
-            // HEART ITEM
-            Texture2D itemSheet = content.Load<Texture2D>("Items/ItemSpritesheet");
-
-            // Voeg het hartje toe op een plek naar keuze (bijv. X=200, Y=500)
-            Items.Add(new HeartItem(itemSheet, new Vector2(200, 600)));
-
-            Texture2D dWalk = content.Load<Texture2D>("Demon2/Walk");
-            Texture2D dAttack = content.Load<Texture2D>("Demon2/Attack");
-            Texture2D dDeath = content.Load<Texture2D>("Demon2/Dead");
-
-            // Geef ze alle drie mee aan de constructor
-            Enemies.Add(new Demon2(dWalk, dAttack, dDeath, new Vector2(800, 500)));
         }
     }
 }
